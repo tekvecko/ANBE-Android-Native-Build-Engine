@@ -6,13 +6,6 @@ from .orchestrator import Orchestrator
 from .preflight import Preflight
 
 
-BANNER = """
-========================================
-ANBE Autonomous Builder v1.0
-========================================
-"""
-
-
 def usage():
 
     print(
@@ -55,10 +48,6 @@ def main():
         project = args[
             1
         ]
-
-        print(
-            BANNER
-        )
 
         Orchestrator().run(
             project

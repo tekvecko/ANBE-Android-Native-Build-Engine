@@ -95,3 +95,56 @@ class BuildContext:
 
         self.logger.error(msg)
 
+
+    def validate(self):
+
+        from .core.context_schema import ContextSchema
+
+        ContextSchema.assert_valid(
+            self
+        )
+
+        return True
+
+
+    def snapshot(self):
+
+        return {
+            "path": str(self.path),
+
+            "project": self.project,
+            "profile": self.profile,
+            "recipe": self.recipe,
+            "plan": self.plan,
+
+            "runtime": self.runtime,
+            "workspace": self.workspace,
+            "cache": self.cache,
+
+            "plugin": (
+                getattr(
+                    self.plugin,
+                    "name",
+                    None
+                )
+                if self.plugin
+                else None
+            ),
+
+            "aapt2": self.aapt2,
+            "gradle": self.gradle,
+            "npm": self.npm,
+
+            "artifacts": [
+                str(x)
+                for x in self.artifacts
+            ],
+
+            "exports": [
+                str(x)
+                for x in self.exports
+            ],
+
+            "execution": self.execution,
+            "meta": self.meta,
+        }

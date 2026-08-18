@@ -1,6 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/python3
 
 from .contract import ContextContract, ContractError
+from .core.context_schema import ContextSchema
 
 
 
@@ -11,6 +12,11 @@ class ContextValidator:
 
 
         try:
+
+            ContextSchema.assert_valid(
+                ctx
+            )
+
 
             ContextContract.validate(
                 ctx,

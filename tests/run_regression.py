@@ -26,9 +26,28 @@ from tests.test_preflight_regression import (
 )
 
 
+
+from tests.test_context_schema import (
+    test_context_schema_valid,
+    test_context_snapshot,
+    test_context_schema_rejects_corruption,
+)
+
 def run():
 
     checks = [
+        (
+            "BuildContext schema",
+            test_context_schema_valid,
+        ),
+        (
+            "BuildContext snapshot",
+            test_context_snapshot,
+        ),
+        (
+            "BuildContext corruption rejection",
+            test_context_schema_rejects_corruption,
+        ),
         (
             "JavaResolver",
             test_java_resolver,
