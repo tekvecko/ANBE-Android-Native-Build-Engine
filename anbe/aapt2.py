@@ -56,6 +56,8 @@ class AAPT2Manager:
 
         ctx.aapt2 = str(aapt2)
 
+        ctx.runtime["aapt2"] = str(aapt2)
+
         print(
             f"[✓] AAPT2 override applied: {aapt2}"
         )

@@ -14,7 +14,9 @@ gradle.properties
 anbe/plugins/dotnet.py
 
 # Large local test fixtures
-tests/
 
 # Local legacy scratch/archive
 legacy/
+
+# Large/local test fixtures
+tests/fixtures/
