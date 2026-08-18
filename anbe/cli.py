@@ -4,6 +4,7 @@ import sys
 
 from .orchestrator import Orchestrator
 from .preflight import Preflight
+from .release_signing import ReleaseSigning
 
 
 def usage():
@@ -12,6 +13,8 @@ def usage():
     print("  anbe build <project>")
     print("  anbe build <project> --release")
     print("  anbe build <project> --release --aab")
+    print("  anbe release <project>")
+    print("  anbe release <project> --aab")
     print("  anbe doctor <project>")
 
 
@@ -94,6 +97,95 @@ def main():
         )
 
         return 0
+
+    if command == "release":
+
+        if len(args) < 2:
+
+            usage()
+            return 1
+
+        project = args[1]
+
+        flags = set(
+            args[2:]
+        )
+
+        allowed = {
+            "--apk",
+            "--aab",
+        }
+
+        unknown = (
+            flags
+            -
+            allowed
+        )
+
+        if unknown:
+
+            print(
+                "Unknown release option: "
+                +
+                ", ".join(
+                    sorted(unknown)
+                )
+            )
+
+            return 1
+
+        artifact_format = (
+            "aab"
+            if "--aab" in flags
+            else "apk"
+        )
+
+        signing = ReleaseSigning()
+
+        status = signing.validate()
+
+        if not status.get(
+            "configured"
+        ):
+
+            print()
+            print("ANBE RELEASE")
+            print("=" * 48)
+            print("[FAIL] Release signing is not configured")
+
+            missing = status.get(
+                "missing",
+                []
+            )
+
+            if missing:
+                print()
+                print("Missing environment variables:")
+
+                for name in missing:
+                    print(" -", name)
+
+            error = status.get(
+                "error"
+            )
+
+            if error:
+                print()
+                print(error)
+
+            print()
+            print("Release aborted before build.")
+
+            return 2
+
+        Orchestrator().run(
+            project,
+            build_mode="release",
+            artifact_format=artifact_format,
+        )
+
+        return 0
+
 
     if command == "doctor":
 
