@@ -8,3 +8,13 @@ reports/
 venv/
 **/__pycache__/
 *.pyc
+
+# Local ANBE development artifacts
+gradle.properties
+anbe/plugins/dotnet.py
+
+# Large local test fixtures
+tests/
+
+# Local legacy scratch/archive
+legacy/
