@@ -33,9 +33,28 @@ from tests.test_context_schema import (
     test_context_schema_rejects_corruption,
 )
 
+
+from tests.test_recipe_steps import (
+    test_structured_recipe_generation,
+    test_legacy_recipe_normalization,
+    test_invalid_recipe_step_rejected,
+)
+
 def run():
 
     checks = [
+        (
+            "Structured recipe",
+            test_structured_recipe_generation,
+        ),
+        (
+            "Legacy recipe compatibility",
+            test_legacy_recipe_normalization,
+        ),
+        (
+            "Recipe validation",
+            test_invalid_recipe_step_rejected,
+        ),
         (
             "BuildContext schema",
             test_context_schema_valid,

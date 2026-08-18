@@ -1,25 +1,52 @@
 #!/usr/bin/env python3
 
+from .recipe.step import RecipeStep
+
 
 class RecipeAdapter:
 
+    def adapt(
+        self,
+        ctx
+    ):
 
-    def adapt(self, ctx):
-
-        steps = ctx.recipe.get(
-            "steps",
-            []
+        steps = (
+            RecipeStep.normalize_all(
+                ctx.recipe.get(
+                    "steps",
+                    []
+                )
+            )
         )
 
-        adapted=[]
+        adapted = []
 
         for step in steps:
 
+            step_type = step[
+                "type"
+            ]
 
-            if "sudo apt-get update" in step:
+            command = step.get(
+                "command",
+                ""
+            )
+
+            if (
+                step_type
+                ==
+                "command"
+                and
+                "sudo apt-get update"
+                in command
+            ):
 
                 adapted.append(
-                    "pkg update && pkg install -y libwebp"
+                    RecipeStep.command(
+                        "termux-install-libwebp",
+                        "pkg update && "
+                        "pkg install -y libwebp",
+                    )
                 )
 
                 ctx.log(
@@ -28,15 +55,33 @@ class RecipeAdapter:
 
                 continue
 
-
-            if "capacitor-assets" in step:
+            if (
+                step_type
+                ==
+                "command"
+                and
+                "capacitor-assets"
+                in command
+            ):
 
                 adapted.append(
-                    "echo 'skip capacitor-assets (sharp unsupported on android-arm64)'"
+                    RecipeStep.command(
+                        "capacitor-assets-skip",
+                        "echo 'skip capacitor-assets "
+                        "(sharp unsupported on "
+                        "android-arm64)'",
+                    )
                 )
 
                 adapted.append(
-                    "mkdir -p android/app/src/main/res && cp assets/icon.png android/app/src/main/res/icon.png"
+                    RecipeStep.command(
+                        "capacitor-icon-copy",
+                        "mkdir -p "
+                        "android/app/src/main/res "
+                        "&& cp assets/icon.png "
+                        "android/app/src/main/res/"
+                        "icon.png",
+                    )
                 )
 
                 ctx.log(
@@ -45,10 +90,12 @@ class RecipeAdapter:
 
                 continue
 
+            adapted.append(
+                step
+            )
 
-            adapted.append(step)
-
-
-        ctx.recipe["steps"]=adapted
+        ctx.recipe[
+            "steps"
+        ] = adapted
 
         return ctx

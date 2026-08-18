@@ -5,32 +5,52 @@ from pathlib import Path
 
 from .command_queue import CommandQueue
 from .java_resolver import JavaResolver
+from .recipe.step import RecipeStep
 
 
 class Executor:
 
-    def android_root(self, ctx):
+    def android_root(
+        self,
+        ctx
+    ):
 
-        root = Path(ctx.path)
+        root = Path(
+            ctx.path
+        )
 
         configured = ctx.recipe.get(
             "android_root"
         )
 
         if not configured:
-            return root / "android"
+
+            return (
+                root
+                /
+                "android"
+            )
 
         configured = Path(
             configured
         )
 
         if configured.is_absolute():
+
             return configured
 
-        return root / configured
+        return (
+            root
+            /
+            configured
+        )
 
 
-    def gradle_command(self, ctx):
+    def gradle_command(
+        self,
+        ctx,
+        task="assembleDebug",
+    ):
 
         android = self.android_root(
             ctx
@@ -41,23 +61,30 @@ class Executor:
         )
 
         aapt2 = (
-            ctx.runtime.get("aapt2")
-            or ctx.aapt2
+            ctx.runtime.get(
+                "aapt2"
+            )
+            or
+            ctx.aapt2
         )
 
         if not aapt2:
 
             raise RuntimeError(
-                "AAPT2 override unavailable before Gradle execution"
+                "AAPT2 override unavailable "
+                "before Gradle execution"
             )
 
-        aapt2 = Path(aapt2)
+        aapt2 = Path(
+            aapt2
+        )
 
         if not aapt2.exists():
 
             raise RuntimeError(
                 "AAPT2 binary missing: "
-                + str(aapt2)
+                +
+                str(aapt2)
             )
 
         command = (
@@ -72,17 +99,44 @@ class Executor:
             )
 
         command += (
-            "clean assembleDebug "
-            "--no-daemon "
+            "clean "
+            +
+            str(task)
+            +
+            " --no-daemon "
             "--stacktrace"
         )
 
         return command
 
 
-    def execute(self, ctx):
+    def step_cwd(
+        self,
+        step,
+        root,
+        android,
+    ):
 
-        root = Path(ctx.path)
+        selector = step.get(
+            "cwd",
+            "project"
+        )
+
+        if selector == "android":
+
+            return android
+
+        return root
+
+
+    def execute(
+        self,
+        ctx
+    ):
+
+        root = Path(
+            ctx.path
+        )
 
         android = self.android_root(
             ctx
@@ -90,8 +144,8 @@ class Executor:
 
         java_home = os.environ.get(
             "JAVA_HOME",
-            "/data/data/com.termux/files/usr/lib/jvm/"
-            "java-21-openjdk"
+            "/data/data/com.termux/files/usr/"
+            "lib/jvm/java-21-openjdk"
         )
 
         os.environ[
@@ -108,42 +162,62 @@ class Executor:
 
         queue = CommandQueue()
 
-        for step in ctx.recipe.get(
-            "steps",
-            []
-        ):
+        steps = RecipeStep.normalize_all(
+            ctx.recipe.get(
+                "steps",
+                []
+            )
+        )
 
-            if step == "npm install":
+        # From here onward the execution model is typed,
+        # even when an old v2 string recipe was supplied.
+        ctx.recipe[
+            "steps"
+        ] = steps
 
-                queue.add(
-                    "npm install",
-                    cwd=str(root)
+        for step in steps:
+
+            step_type = step[
+                "type"
+            ]
+
+            if step_type == "command":
+
+                command = step[
+                    "command"
+                ]
+
+                cwd = self.step_cwd(
+                    step,
+                    root,
+                    android,
                 )
 
-            elif step == "npm run build":
-
                 queue.add(
-                    "npm run build",
-                    cwd=str(root)
+                    command,
+                    cwd=str(cwd)
                 )
 
-            elif step == "npx cap sync android":
+                continue
 
-                queue.add(
-                    "npx cap sync android",
-                    cwd=str(root)
-                )
-
-            elif step == "android prepare":
+            if (
+                step_type
+                ==
+                "android_prepare"
+            ):
 
                 ctx.info(
-                    "Android preparation already handled"
+                    "Android preparation "
+                    "already handled"
                 )
 
-            elif step == "gradle assembleDebug":
+                continue
+
+            if step_type == "gradle":
 
                 gradlew = (
-                    android /
+                    android
+                    /
                     "gradlew"
                 )
 
@@ -151,22 +225,33 @@ class Executor:
 
                     raise RuntimeError(
                         "Gradle wrapper missing: "
-                        + str(gradlew)
+                        +
+                        str(gradlew)
                     )
 
                 gradlew.chmod(
                     0o755
                 )
 
+                task = step.get(
+                    "task",
+                    "assembleDebug"
+                )
+
                 command = self.gradle_command(
-                    ctx
+                    ctx,
+                    task=task,
                 )
 
                 ctx.info(
                     "Gradle AAPT2: "
-                    + str(
-                        ctx.runtime.get("aapt2")
-                        or ctx.aapt2
+                    +
+                    str(
+                        ctx.runtime.get(
+                            "aapt2"
+                        )
+                        or
+                        ctx.aapt2
                     )
                 )
 
@@ -175,14 +260,17 @@ class Executor:
                     cwd=str(android)
                 )
 
-            else:
+                continue
 
-                ctx.warn(
-                    "Unknown recipe step: "
-                    + str(step)
-                )
+            raise RuntimeError(
+                "Unsupported recipe step type: "
+                +
+                str(step_type)
+            )
 
-        ctx.execution = queue.execute()
+        ctx.execution = (
+            queue.execute()
+        )
 
         ctx.log(
             "Build executed"

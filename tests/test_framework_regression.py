@@ -37,7 +37,18 @@ def test_recipe_android_discovery():
 
     assert ctx.recipe["android_root"] == "android"
 
-    assert "gradle assembleDebug" in ctx.recipe["steps"]
+    gradle_steps = [
+        step
+        for step in ctx.recipe["steps"]
+        if (
+            isinstance(step, dict)
+            and
+            step.get("type") == "gradle"
+        )
+    ]
+
+    assert len(gradle_steps) == 1
+    assert gradle_steps[0]["task"] == "assembleDebug"
 
     assert ctx.recipe["artifact"] == {
         "type": "apk",
