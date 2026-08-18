@@ -50,11 +50,15 @@ def test_recipe_android_discovery():
     assert len(gradle_steps) == 1
     assert gradle_steps[0]["task"] == "assembleDebug"
 
-    assert ctx.recipe["artifact"] == {
-        "type": "apk",
-        "path":
+    artifact = ctx.recipe["artifact"]
+
+    assert artifact["type"] == "apk"
+    assert artifact["mode"] == "debug"
+    assert (
+        artifact["path"]
+        ==
         "android/app/build/outputs/apk/debug/app-debug.apk"
-    }
+    )
 
 
 def test_pipeline_stage_contract():
@@ -79,9 +83,11 @@ def test_pipeline_stage_contract():
         "RecipeExport",
         "Adapter",
         "Repair",
+        "Signing",
         "AAPT2",
         "Executor",
         "Artifacts",
+        "Signature",
         "Verify",
         "Export",
         "Report",

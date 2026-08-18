@@ -8,6 +8,7 @@ from .java_resolver import JavaResolver
 from .recipe.step import RecipeStep
 from .recipe.graph import RecipeGraph
 from .execution_planner import ExecutionPlanner
+from .release_signing import ReleaseSigning
 
 
 class Executor:
@@ -99,6 +100,61 @@ class Executor:
             command += (
                 f"-Dorg.gradle.java.home={java} "
             )
+
+        release = (
+            str(task).lower()
+            .endswith("release")
+        )
+
+        if release:
+
+            signing = ReleaseSigning()
+
+            status = (
+                signing.validate()
+            )
+
+            if status.get(
+                "configured"
+            ):
+
+                for name, value in (
+                    signing
+                    .gradle_environment()
+                    .items()
+                ):
+
+                    os.environ[
+                        name
+                    ] = value
+
+                ctx.meta[
+                    "release_signing"
+                ] = {
+                    "configured":
+                    True,
+
+                    "keystore":
+                    status.get(
+                        "keystore"
+                    ),
+
+                    "key_alias":
+                    status.get(
+                        "key_alias"
+                    ),
+                }
+
+            else:
+
+                ctx.meta[
+                    "release_signing"
+                ] = status
+
+                ctx.warn(
+                    "Release signing credentials "
+                    "not fully configured"
+                )
 
         command += (
             "clean "

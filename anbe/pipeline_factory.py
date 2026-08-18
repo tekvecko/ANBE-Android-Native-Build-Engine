@@ -26,10 +26,12 @@ from .recipe import (
 from .adapter import RecipeAdapter
 from .repair import RepairEngine
 from .aapt2 import AAPT2Manager
+from .signing_bridge import SigningBridge
 
 from .executor import Executor
 
 from .artifact import ArtifactEngine
+from .release_signature_verifier import ReleaseSignatureVerifier
 from .build_verifier import BuildVerifier
 
 from .export_report import ExportReport
@@ -156,6 +158,14 @@ class PipelineFactory:
 
         pipeline.add(
             MethodStage(
+                SigningBridge(),
+                "apply",
+                "Signing"
+            )
+        )
+
+        pipeline.add(
+            MethodStage(
                 AAPT2Manager(),
                 "apply",
                 "AAPT2"
@@ -175,6 +185,14 @@ class PipelineFactory:
                 artifact,
                 "detect",
                 "Artifacts"
+            )
+        )
+
+        pipeline.add(
+            MethodStage(
+                ReleaseSignatureVerifier(),
+                "verify",
+                "Signature"
             )
         )
 

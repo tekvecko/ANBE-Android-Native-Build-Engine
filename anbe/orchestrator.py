@@ -10,7 +10,12 @@ from .context_dump import ContextDump
 class Orchestrator:
 
 
-    def run(self, project):
+    def run(
+        self,
+        project,
+        build_mode="debug",
+        artifact_format="apk",
+    ):
 
         print()
         print("="*40)
@@ -22,7 +27,9 @@ class Orchestrator:
 
 
         ctx = Builder().build(
-            project
+            project,
+            build_mode=build_mode,
+            artifact_format=artifact_format,
         )
 
 

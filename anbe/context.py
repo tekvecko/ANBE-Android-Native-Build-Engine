@@ -43,6 +43,10 @@ class BuildContext:
 
         self.meta = {}
 
+        self.build_mode = "debug"
+
+        self.artifact_format = "apk"
+
     def set(self, name, value):
 
         setattr(self, name, value)
@@ -147,4 +151,7 @@ class BuildContext:
 
             "execution": self.execution,
             "meta": self.meta,
+
+            "build_mode": self.build_mode,
+            "artifact_format": self.artifact_format,
         }

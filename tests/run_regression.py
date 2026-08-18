@@ -58,9 +58,80 @@ from tests.test_execution_planner import (
     test_real_android_recipe_plan,
 )
 
+
+from tests.test_release_builder import (
+    test_debug_recipe_unchanged,
+    test_release_apk_recipe,
+    test_release_aab_recipe,
+    test_signing_missing_is_safe,
+)
+
+
+from tests.test_signing_bridge import (
+    test_signing_bridge_injection,
+    test_signing_bridge_idempotent,
+)
+
+
+from tests.test_release_signature_verifier import (
+    test_signature_verifier_success,
+    test_signature_verifier_failure,
+    test_signature_verifier_debug_skip,
+    test_signature_verifier_aab_skip,
+)
+
+
+from tests.test_release_secret_safety import (
+    test_gradle_command_does_not_contain_secrets,
+)
+
 def run():
 
     checks = [
+        (
+            "Release secret leakage safety",
+            test_gradle_command_does_not_contain_secrets,
+        ),
+        (
+            "Release signature verification",
+            test_signature_verifier_success,
+        ),
+        (
+            "Invalid signature rejection",
+            test_signature_verifier_failure,
+        ),
+        (
+            "Debug signature skip",
+            test_signature_verifier_debug_skip,
+        ),
+        (
+            "AAB signature skip",
+            test_signature_verifier_aab_skip,
+        ),
+        (
+            "Signing bridge injection",
+            test_signing_bridge_injection,
+        ),
+        (
+            "Signing bridge idempotency",
+            test_signing_bridge_idempotent,
+        ),
+        (
+            "Debug release compatibility",
+            test_debug_recipe_unchanged,
+        ),
+        (
+            "Release APK recipe",
+            test_release_apk_recipe,
+        ),
+        (
+            "Release AAB recipe",
+            test_release_aab_recipe,
+        ),
+        (
+            "Release signing safety",
+            test_signing_missing_is_safe,
+        ),
         (
             "Execution waves",
             test_execution_waves,

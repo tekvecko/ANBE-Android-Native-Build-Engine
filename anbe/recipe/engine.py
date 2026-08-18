@@ -222,6 +222,45 @@ class RecipeEngine:
                     "npm-install"
                 ]
 
+            build_mode = getattr(
+                ctx,
+                "build_mode",
+                "debug"
+            )
+
+            artifact_format = getattr(
+                ctx,
+                "artifact_format",
+                "apk"
+            )
+
+            if build_mode == "release":
+
+                gradle_task = (
+                    "bundleRelease"
+                    if artifact_format == "aab"
+                    else "assembleRelease"
+                )
+
+            else:
+
+                gradle_task = (
+                    "assembleDebug"
+                )
+
+            recipe[
+                "build"
+            ] = {
+                "mode":
+                build_mode,
+
+                "format":
+                artifact_format,
+
+                "gradle_task":
+                gradle_task,
+            }
+
             recipe[
                 "steps"
             ].extend([
@@ -229,18 +268,57 @@ class RecipeEngine:
                     depends_on=previous
                 ),
                 RecipeStep.gradle(
-                    "assembleDebug",
+                    gradle_task,
                     depends_on=[
                         "android-prepare"
                     ],
                 ),
             ])
 
+            if build_mode == "debug":
+
+                artifact_suffix = (
+                    "app/build/outputs/apk/"
+                    "debug/app-debug.apk"
+                )
+
+                artifact_type = "apk"
+
+            elif artifact_format == "aab":
+
+                artifact_suffix = (
+                    "app/build/outputs/bundle/"
+                    "release/app-release.aab"
+                )
+
+                artifact_type = "aab"
+
+            else:
+
+                from anbe.release_signing import ReleaseSigning
+
+                signing = ReleaseSigning()
+
+                if signing.configured():
+
+                    artifact_suffix = (
+                        "app/build/outputs/apk/"
+                        "release/app-release.apk"
+                    )
+
+                else:
+
+                    artifact_suffix = (
+                        "app/build/outputs/apk/"
+                        "release/app-release-unsigned.apk"
+                    )
+
+                artifact_type = "apk"
+
             if android_root == project:
 
                 artifact_path = (
-                    "app/build/outputs/apk/"
-                    "debug/app-debug.apk"
+                    artifact_suffix
                 )
 
             else:
@@ -252,15 +330,19 @@ class RecipeEngine:
                         )
                     )
                     +
-                    "/app/build/outputs/apk/"
-                    "debug/app-debug.apk"
+                    "/"
+                    +
+                    artifact_suffix
                 )
 
             recipe[
                 "artifact"
             ] = {
                 "type":
-                "apk",
+                artifact_type,
+
+                "mode":
+                build_mode,
 
                 "path":
                 artifact_path,

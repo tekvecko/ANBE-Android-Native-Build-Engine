@@ -21,6 +21,7 @@ class ArtifactEngine:
             spec,
             dict
         ):
+
             return None
 
         path = spec.get(
@@ -28,6 +29,7 @@ class ArtifactEngine:
         )
 
         if not path:
+
             return None
 
         artifact = Path(
@@ -45,116 +47,109 @@ class ArtifactEngine:
         return artifact
 
 
-    def detect(self, ctx):
+    def detect(
+        self,
+        ctx
+    ):
 
         project = Path(
             ctx.path
         )
 
-        candidates = []
-
-        expected = self.expected_artifact(
-            ctx
+        expected = (
+            self.expected_artifact(
+                ctx
+            )
         )
 
-        if expected is not None:
+        artifact = None
 
-            candidates.append(
-                expected
-            )
+        if (
+            expected is not None
+            and
+            expected.exists()
+            and
+            expected.is_file()
+        ):
 
-        candidates.extend([
-            (
-                project
-                / "app"
-                / "build"
-                / "outputs"
-                / "apk"
-                / "debug"
-                / "app-debug.apk"
-            ),
-            (
-                project
-                / "android"
-                / "app"
-                / "build"
-                / "outputs"
-                / "apk"
-                / "debug"
-                / "app-debug.apk"
-            ),
-        ])
+            artifact = expected
 
-        apk = None
+        if artifact is None:
 
-        seen = set()
+            patterns = [
+                "*.apk",
+                "*.aab",
+            ]
 
-        for candidate in candidates:
+            matches = []
 
-            candidate = Path(
-                candidate
-            )
+            for pattern in patterns:
 
-            key = str(
-                candidate
-            )
-
-            if key in seen:
-                continue
-
-            seen.add(
-                key
-            )
-
-            if (
-                candidate.exists()
-                and
-                candidate.is_file()
-            ):
-
-                apk = candidate
-                break
-
-        if apk is None:
-
-            for item in project.rglob(
-                "*.apk"
-            ):
-
-                if item.is_file():
-
-                    apk = item
-                    break
-
-        if apk is not None:
-
-            if apk not in ctx.artifacts:
-
-                ctx.artifacts.append(
-                    apk
+                matches.extend(
+                    item
+                    for item
+                    in project.rglob(
+                        pattern
+                    )
+                    if item.is_file()
                 )
 
-            ctx.log(
-                f"APK detected: {apk}"
+            matches.sort(
+                key=lambda item:
+                item.stat().st_mtime,
+                reverse=True
             )
 
-        else:
+            if matches:
+
+                artifact = (
+                    matches[0]
+                )
+
+        if artifact is None:
 
             ctx.log(
-                "APK not produced"
+                "Build artifact not produced"
             )
+
+            return ctx
+
+        if artifact not in (
+            ctx.artifacts
+        ):
+
+            ctx.artifacts.append(
+                artifact
+            )
+
+        ctx.log(
+            "Artifact detected: "
+            +
+            str(artifact)
+        )
 
         return ctx
 
 
-    def export(self, ctx):
+    def export(
+        self,
+        ctx
+    ):
 
         DOWNLOADS.mkdir(
             parents=True,
             exist_ok=True
         )
 
-        for artifact in ctx.artifacts:
+        mode = getattr(
+            ctx,
+            "build_mode",
+            "debug"
+        )
+
+        for artifact in (
+            ctx.artifacts
+        ):
 
             artifact = Path(
                 artifact
@@ -163,12 +158,46 @@ class ArtifactEngine:
             if not artifact.exists():
 
                 raise RuntimeError(
-                    f"Artifact missing before export: {artifact}"
+                    "Artifact missing before export: "
+                    +
+                    str(artifact)
+                )
+
+            suffix = (
+                artifact.suffix.lower()
+            )
+
+            if suffix not in (
+                ".apk",
+                ".aab",
+            ):
+
+                raise RuntimeError(
+                    "Unsupported artifact type: "
+                    +
+                    suffix
+                )
+
+            if mode == "release":
+
+                name = (
+                    "anbe-release"
+                    +
+                    suffix
+                )
+
+            else:
+
+                name = (
+                    "anbe-build"
+                    +
+                    suffix
                 )
 
             dst = (
                 DOWNLOADS
-                / "anbe-build.apk"
+                /
+                name
             )
 
             shutil.copy2(
@@ -176,14 +205,18 @@ class ArtifactEngine:
                 dst
             )
 
-            if dst not in ctx.exports:
+            if dst not in (
+                ctx.exports
+            ):
 
                 ctx.exports.append(
                     dst
                 )
 
             ctx.log(
-                f"APK exported: {dst}"
+                "Artifact exported: "
+                +
+                str(dst)
             )
 
         return ctx
