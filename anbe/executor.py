@@ -6,6 +6,7 @@ from pathlib import Path
 from .command_queue import CommandQueue
 from .java_resolver import JavaResolver
 from .recipe.step import RecipeStep
+from .recipe.graph import RecipeGraph
 
 
 class Executor:
@@ -169,8 +170,18 @@ class Executor:
             )
         )
 
-        # From here onward the execution model is typed,
-        # even when an old v2 string recipe was supplied.
+        RecipeGraph.assert_valid(
+            steps
+        )
+
+        steps = (
+            RecipeGraph.topological_sort(
+                steps
+            )
+        )
+
+        # Execution remains sequential in v1.7,
+        # but ordering is now derived from dependencies.
         ctx.recipe[
             "steps"
         ] = steps

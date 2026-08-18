@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from .recipe.step import RecipeStep
+from .recipe.graph import RecipeGraph
 
 
 class RecipeAdapter:
@@ -46,6 +47,10 @@ class RecipeAdapter:
                         "termux-install-libwebp",
                         "pkg update && "
                         "pkg install -y libwebp",
+                        depends_on=step.get(
+                            "depends_on",
+                            []
+                        ),
                     )
                 )
 
@@ -70,6 +75,10 @@ class RecipeAdapter:
                         "echo 'skip capacitor-assets "
                         "(sharp unsupported on "
                         "android-arm64)'",
+                        depends_on=step.get(
+                            "depends_on",
+                            []
+                        ),
                     )
                 )
 
@@ -81,6 +90,9 @@ class RecipeAdapter:
                         "&& cp assets/icon.png "
                         "android/app/src/main/res/"
                         "icon.png",
+                        depends_on=[
+                            "capacitor-assets-skip"
+                        ],
                     )
                 )
 
@@ -94,8 +106,14 @@ class RecipeAdapter:
                 step
             )
 
+        RecipeGraph.assert_valid(
+            adapted
+        )
+
         ctx.recipe[
             "steps"
-        ] = adapted
+        ] = RecipeGraph.topological_sort(
+            adapted
+        )
 
         return ctx

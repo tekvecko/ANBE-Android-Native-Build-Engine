@@ -4,6 +4,7 @@ from pathlib import Path
 import json
 
 from .step import RecipeStep
+from .graph import RecipeGraph
 
 
 class RecipeEngine:
@@ -75,6 +76,9 @@ class RecipeEngine:
                     RecipeStep.command(
                         "npm-build",
                         "npm run build",
+                        depends_on=[
+                            "npm-install"
+                        ],
                     )
                 )
 
@@ -106,6 +110,21 @@ class RecipeEngine:
                 RecipeStep.command(
                     "capacitor-sync-android",
                     "npx cap sync android",
+                    depends_on=(
+                        ["npm-build"]
+                        if any(
+                            step.get("id") == "npm-build"
+                            for step in recipe["steps"]
+                        )
+                        else (
+                            ["npm-install"]
+                            if any(
+                                step.get("id") == "npm-install"
+                                for step in recipe["steps"]
+                            )
+                            else []
+                        )
+                    ),
                 )
             )
 
@@ -174,12 +193,46 @@ class RecipeEngine:
                 "android_root"
             ] = android_root_value
 
+            previous = []
+
+            if any(
+                step.get("id") == "capacitor-sync-android"
+                for step in recipe["steps"]
+            ):
+
+                previous = [
+                    "capacitor-sync-android"
+                ]
+
+            elif any(
+                step.get("id") == "npm-build"
+                for step in recipe["steps"]
+            ):
+
+                previous = [
+                    "npm-build"
+                ]
+
+            elif any(
+                step.get("id") == "npm-install"
+                for step in recipe["steps"]
+            ):
+
+                previous = [
+                    "npm-install"
+                ]
+
             recipe[
                 "steps"
             ].extend([
-                RecipeStep.android_prepare(),
+                RecipeStep.android_prepare(
+                    depends_on=previous
+                ),
                 RecipeStep.gradle(
-                    "assembleDebug"
+                    "assembleDebug",
+                    depends_on=[
+                        "android-prepare"
+                    ],
                 ),
             ])
 
@@ -217,6 +270,20 @@ class RecipeEngine:
         recipe[
             "steps"
         ] = RecipeStep.normalize_all(
+            recipe[
+                "steps"
+            ]
+        )
+
+        RecipeGraph.assert_valid(
+            recipe[
+                "steps"
+            ]
+        )
+
+        recipe[
+            "steps"
+        ] = RecipeGraph.topological_sort(
             recipe[
                 "steps"
             ]

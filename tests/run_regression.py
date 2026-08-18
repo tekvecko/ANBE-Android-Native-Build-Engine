@@ -40,9 +40,38 @@ from tests.test_recipe_steps import (
     test_invalid_recipe_step_rejected,
 )
 
+
+from tests.test_recipe_graph import (
+    test_dependency_topological_sort,
+    test_stable_topological_order,
+    test_missing_dependency_rejected,
+    test_cycle_rejected,
+    test_duplicate_ids_rejected,
+)
+
 def run():
 
     checks = [
+        (
+            "Dependency ordering",
+            test_dependency_topological_sort,
+        ),
+        (
+            "Stable dependency ordering",
+            test_stable_topological_order,
+        ),
+        (
+            "Missing dependency rejection",
+            test_missing_dependency_rejected,
+        ),
+        (
+            "Dependency cycle rejection",
+            test_cycle_rejected,
+        ),
+        (
+            "Duplicate step rejection",
+            test_duplicate_ids_rejected,
+        ),
         (
             "Structured recipe",
             test_structured_recipe_generation,

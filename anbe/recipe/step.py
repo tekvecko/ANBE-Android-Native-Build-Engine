@@ -56,6 +56,7 @@ class RecipeStep:
         step_id,
         command,
         cwd="project",
+        depends_on=None,
     ):
 
         return {
@@ -64,17 +65,26 @@ class RecipeStep:
             "type": "command",
             "command": command,
             "cwd": cwd,
+            "depends_on": list(
+                depends_on or []
+            ),
         }
 
 
     @classmethod
-    def android_prepare(cls):
+    def android_prepare(
+        cls,
+        depends_on=None,
+    ):
 
         return {
             "schema": cls.SCHEMA,
             "id": "android-prepare",
             "type": "android_prepare",
             "cwd": "android",
+            "depends_on": list(
+                depends_on or []
+            ),
         }
 
 
@@ -82,6 +92,7 @@ class RecipeStep:
     def gradle(
         cls,
         task="assembleDebug",
+        depends_on=None,
     ):
 
         return {
@@ -94,6 +105,9 @@ class RecipeStep:
             "type": "gradle",
             "task": task,
             "cwd": "android",
+            "depends_on": list(
+                depends_on or []
+            ),
         }
 
 
@@ -142,6 +156,11 @@ class RecipeStep:
             result.setdefault(
                 "schema",
                 cls.SCHEMA
+            )
+
+            result.setdefault(
+                "depends_on",
+                []
             )
 
             return result
@@ -216,6 +235,40 @@ class RecipeStep:
 
             errors.append(
                 "gradle step missing task"
+            )
+
+        depends_on = step.get(
+            "depends_on",
+            []
+        )
+
+        if not isinstance(
+            depends_on,
+            list
+        ):
+
+            errors.append(
+                "depends_on must be a list"
+            )
+
+        elif not all(
+            isinstance(item, str)
+            and item
+            for item in depends_on
+        ):
+
+            errors.append(
+                "depends_on entries must be non-empty strings"
+            )
+
+        elif len(
+            depends_on
+        ) != len(
+            set(depends_on)
+        ):
+
+            errors.append(
+                "depends_on contains duplicates"
             )
 
         cwd = step.get(

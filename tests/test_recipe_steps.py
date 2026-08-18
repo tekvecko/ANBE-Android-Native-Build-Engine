@@ -123,6 +123,32 @@ def test_structured_recipe_generation():
         )
 
 
+        dependency_map = {
+            step["id"]:
+            step.get(
+                "depends_on",
+                []
+            )
+            for step in steps
+        }
+
+        assert dependency_map == {
+            "npm-install": [],
+            "npm-build": [
+                "npm-install"
+            ],
+            "capacitor-sync-android": [
+                "npm-build"
+            ],
+            "android-prepare": [
+                "capacitor-sync-android"
+            ],
+            "gradle-assembledebug": [
+                "android-prepare"
+            ],
+        }
+
+
 def test_legacy_recipe_normalization():
 
     legacy = [
