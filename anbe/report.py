@@ -1,61 +1,76 @@
-#!/usr/bin/env python3
+#!/data/data/com.termux/files/usr/bin/python3
 
+import json
 from pathlib import Path
 from datetime import datetime
-from .utils import save_json, timestamp
 
 
-class Reporter:
+class ANBEReport:
 
-
-    def create(self,ctx):
-
-        report = {
-
-            "schema":
-            "anbe.report.v1",
-
-            "created":
-            datetime.now().isoformat(),
-
-            "project":
-            str(ctx.project),
-
-            "profile":
-            ctx.profile,
-
-            "runtime":
-            ctx.runtime,
-
-            "workspace":
-            ctx.workspace,
-
-            "commands":
-            ctx.commands,
-
-            "logs":
-            ctx.logs,
-
-            "artifact":
-            ctx.artifact,
-
-            "success":
-            not ctx.failed
+    def __init__(self):
+        self.data = {
+            "engine": "ANBE APK Doctor",
+            "version": "3.1",
+            "time": str(datetime.now()),
+            "checks": {}
         }
 
 
-        filename = (
-            "reports/build-"
-            + timestamp()
-            + ".json"
+    def add(self, key, value):
+
+        self.data["checks"][key] = value
+
+
+    def status(self):
+
+        errors = []
+
+        for k,v in self.data["checks"].items():
+
+            if isinstance(v, dict):
+
+                if v.get("status") == "error":
+                    errors.append(k)
+
+
+        if errors:
+            self.data["status"] = "NEEDS_REVIEW"
+
+        else:
+            self.data["status"] = "CLEAN"
+
+
+
+    def save(self, name="apk_report.json"):
+
+        self.status()
+
+        folder = Path("reports")
+
+        folder.mkdir(
+            exist_ok=True
         )
 
+        out = folder / name
 
-        save_json(
-            filename,
-            report
+
+        with open(
+            out,
+            "w",
+            encoding="utf-8"
+        ) as f:
+
+            json.dump(
+                self.data,
+                f,
+                indent=4,
+                ensure_ascii=False
+            )
+
+
+        print(
+            "[✓] Report:",
+            out
         )
 
-
-        return filename
 

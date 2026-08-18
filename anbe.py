@@ -67,13 +67,13 @@ def main():
 
         print()
 
-        if ctx.artifact and ctx.artifact.get(
-            "found"
-        ):
+        if ctx.artifacts:
 
             print(
                 "APK:",
-                ctx.artifact["export"]
+                ctx.exports[-1]
+                if ctx.exports
+                else ctx.artifacts[-1]
             )
 
         else:

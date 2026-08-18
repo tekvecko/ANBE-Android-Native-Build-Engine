@@ -41,9 +41,14 @@ class ProcessRunner:
         }
 
         if check and p.returncode != 0:
-            raise RuntimeError(
-                p.stderr if p.stderr else p.stdout
-            )
+            print("\n=== COMMAND FAILED ===")
+            print("CMD:", cmd)
+            print("CWD:", cwd)
+            print("\n--- STDOUT ---")
+            print(p.stdout)
+            print("\n--- STDERR ---")
+            print(p.stderr)
+            raise RuntimeError("command failed")
 
         return result
 

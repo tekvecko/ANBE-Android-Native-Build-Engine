@@ -9,10 +9,21 @@ class Plugin(BasePlugin):
 
     def detect(self, ctx):
 
-        return self.exists(
-            ctx,
-            "android"
+        root = ctx.path
+
+        android_files = [
+            "build.gradle",
+            "build.gradle.kts",
+            "settings.gradle",
+            "settings.gradle.kts",
+            "gradlew"
+        ]
+
+        return any(
+            (root / f).exists()
+            for f in android_files
         )
+
 
     def prepare(self, ctx):
 

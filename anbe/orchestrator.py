@@ -1,6 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/python3
 
 from pathlib import Path
+from .git_loader import GitLoader
 
 from .builder import Builder
 from .context_dump import ContextDump
@@ -17,7 +18,7 @@ class Orchestrator:
         print("="*40)
 
 
-        project = Path(project)
+        project = GitLoader().load(project)
 
 
         ctx = Builder().build(

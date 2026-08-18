@@ -13,7 +13,7 @@ class AndroidCleaner:
 
 
         android=Path(
-            ctx.project
+            ctx.path
         )/"android"
 
 

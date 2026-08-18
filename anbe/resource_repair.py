@@ -14,7 +14,7 @@ class ResourceRepair:
 
 
         root=Path(
-            ctx.project
+            ctx.path
         )
 
 

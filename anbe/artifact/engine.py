@@ -10,26 +10,39 @@ class ArtifactEngine:
 
     def detect(self, ctx):
 
-        apk = (
-            ctx.path
-            / "android"
-            / "app"
-            / "build"
-            / "outputs"
-            / "apk"
-            / "debug"
-            / "app-debug.apk"
-        )
+        candidates = [
+            Path(ctx.path) / "app" / "build" / "outputs" / "apk" / "debug" / "app-debug.apk",
+            Path(ctx.path) / "android" / "app" / "build" / "outputs" / "apk" / "debug" / "app-debug.apk",
+        ]
 
-        if apk.exists():
+        apk = None
+
+        for candidate in candidates:
+            if candidate.exists():
+                apk = candidate
+                break
+
+        if not apk:
+            for item in Path(ctx.path).rglob("*.apk"):
+                apk = item
+                break
+
+        if apk:
 
             ctx.artifacts.append(
                 apk
             )
 
             ctx.log(
-                "APK detected"
+                f"APK detected: {apk}"
             )
+
+        else:
+
+            ctx.log(
+                "APK not produced"
+            )
+
 
     def export(self, ctx):
 
@@ -52,6 +65,5 @@ class ArtifactEngine:
             )
 
             ctx.log(
-                "APK exported"
+                f"APK exported: {dst}"
             )
-

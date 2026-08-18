@@ -34,10 +34,15 @@ class ProjectDetector:
             )
 
 
-        if (
-            root /
-            "android"
-        ).exists():
+        android_files = [
+            "build.gradle",
+            "build.gradle.kts",
+            "settings.gradle",
+            "settings.gradle.kts",
+            "gradlew"
+        ]
+
+        if any((root / f).exists() for f in android_files):
 
             project["platform"] = "android"
 
