@@ -63,9 +63,28 @@ from tests.test_release_secret_safety import (
     test_gradle_command_does_not_contain_secrets,
 )
 
+
+from tests.test_launch_report import (
+    test_launch_identity,
+    test_launch_artifact_metadata,
+    test_launch_readiness_ready,
+)
+
 def run():
 
     checks = [
+        (
+            "Launch app identity",
+            test_launch_identity,
+        ),
+        (
+            "Launch artifact metadata",
+            test_launch_artifact_metadata,
+        ),
+        (
+            "Launch readiness",
+            test_launch_readiness_ready,
+        ),
         (
             "Release secret leakage safety",
             test_gradle_command_does_not_contain_secrets,

@@ -5,6 +5,7 @@ import sys
 from .orchestrator import Orchestrator
 from .preflight import Preflight
 from .release_signing import ReleaseSigning
+from .launch_report import LaunchReport
 
 
 def usage():
@@ -15,6 +16,8 @@ def usage():
     print("  anbe build <project> --release --aab")
     print("  anbe release <project>")
     print("  anbe release <project> --aab")
+    print("  anbe launch <project>")
+    print("  anbe launch <project> --aab")
     print("  anbe doctor <project>")
 
 
@@ -185,6 +188,173 @@ def main():
         )
 
         return 0
+
+
+    if command == "launch":
+
+        if len(args) < 2:
+
+            usage()
+            return 1
+
+        project = args[1]
+
+        flags = set(
+            args[2:]
+        )
+
+        allowed = {
+            "--apk",
+            "--aab",
+        }
+
+        unknown = (
+            flags
+            -
+            allowed
+        )
+
+        if unknown:
+
+            print(
+                "Unknown launch option: "
+                +
+                ", ".join(
+                    sorted(unknown)
+                )
+            )
+
+            return 1
+
+        artifact_format = (
+            "aab"
+            if "--aab" in flags
+            else "apk"
+        )
+
+        signing = ReleaseSigning()
+
+        status = (
+            signing.validate()
+        )
+
+        if not status.get(
+            "configured"
+        ):
+
+            print()
+            print("ANBE LAUNCH")
+            print("=" * 48)
+            print(
+                "[FAIL] Release signing "
+                "is not configured"
+            )
+
+            for name in status.get(
+                "missing",
+                []
+            ):
+
+                print(
+                    " -",
+                    name
+                )
+
+            error = status.get(
+                "error"
+            )
+
+            if error:
+
+                print(
+                    error
+                )
+
+            return 2
+
+        ctx = Orchestrator().run(
+            project,
+            build_mode="release",
+            artifact_format=artifact_format,
+        )
+
+        report = (
+            LaunchReport()
+            .create(
+                ctx
+            )
+        )
+
+        readiness = report[
+            "readiness"
+        ]
+
+        print()
+        print("=" * 48)
+        print("ANBE LAUNCH")
+        print("=" * 48)
+
+        print(
+            "Application:",
+            report[
+                "app"
+            ].get(
+                "application_id"
+            )
+        )
+
+        print(
+            "Artifact:",
+            (
+                report[
+                    "artifact"
+                ] or {}
+            ).get(
+                "path"
+            )
+        )
+
+        print(
+            "Readiness:",
+            str(
+                readiness[
+                    "score"
+                ]
+            )
+            +
+            "/100",
+            readiness[
+                "status"
+            ]
+        )
+
+        launch_meta = ctx.meta[
+            "launch_report"
+        ]
+
+        print(
+            "JSON report:",
+            launch_meta[
+                "json"
+            ]
+        )
+
+        print(
+            "TXT report:",
+            launch_meta[
+                "text"
+            ]
+        )
+
+        return (
+            0
+            if readiness[
+                "status"
+            ]
+            ==
+            "READY"
+            else 3
+        )
 
 
     if command == "doctor":
