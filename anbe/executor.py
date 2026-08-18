@@ -7,6 +7,7 @@ from .command_queue import CommandQueue
 from .java_resolver import JavaResolver
 from .recipe.step import RecipeStep
 from .recipe.graph import RecipeGraph
+from .execution_planner import ExecutionPlanner
 
 
 class Executor:
@@ -170,21 +171,50 @@ class Executor:
             )
         )
 
-        RecipeGraph.assert_valid(
-            steps
-        )
+        planner = ExecutionPlanner()
 
-        steps = (
-            RecipeGraph.topological_sort(
+        execution_plan = (
+            planner.plan(
                 steps
             )
         )
 
-        # Execution remains sequential in v1.7,
-        # but ordering is now derived from dependencies.
+        steps = (
+            planner.ordered_steps(
+                steps
+            )
+        )
+
+        # v1.8 execution is deliberately sequential.
+        # The planner now exposes dependency waves so
+        # a later concurrent runner can safely consume them.
         ctx.recipe[
             "steps"
         ] = steps
+
+        ctx.meta[
+            "execution_plan"
+        ] = execution_plan
+
+        ctx.info(
+            "Execution plan: "
+            +
+            str(
+                execution_plan[
+                    "wave_count"
+                ]
+            )
+            +
+            " wave(s), "
+            +
+            str(
+                execution_plan[
+                    "step_count"
+                ]
+            )
+            +
+            " step(s)"
+        )
 
         for step in steps:
 

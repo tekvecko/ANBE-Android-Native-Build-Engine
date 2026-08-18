@@ -49,9 +49,38 @@ from tests.test_recipe_graph import (
     test_duplicate_ids_rejected,
 )
 
+
+from tests.test_execution_planner import (
+    test_execution_waves,
+    test_execution_plan_stable,
+    test_gradle_not_parallel_safe,
+    test_planner_preserves_dependency_order,
+    test_real_android_recipe_plan,
+)
+
 def run():
 
     checks = [
+        (
+            "Execution waves",
+            test_execution_waves,
+        ),
+        (
+            "Execution plan stability",
+            test_execution_plan_stable,
+        ),
+        (
+            "Exclusive Gradle scheduling",
+            test_gradle_not_parallel_safe,
+        ),
+        (
+            "Planner dependency ordering",
+            test_planner_preserves_dependency_order,
+        ),
+        (
+            "Android recipe execution plan",
+            test_real_android_recipe_plan,
+        ),
         (
             "Dependency ordering",
             test_dependency_topological_sort,
