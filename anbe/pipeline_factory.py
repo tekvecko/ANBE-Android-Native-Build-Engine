@@ -30,6 +30,7 @@ from .aapt2 import AAPT2Manager
 from .executor import Executor
 
 from .artifact import ArtifactEngine
+from .build_verifier import BuildVerifier
 
 from .export_report import ExportReport
 from .manifest import Manifest
@@ -174,6 +175,14 @@ class PipelineFactory:
                 artifact,
                 "detect",
                 "Artifacts"
+            )
+        )
+
+        pipeline.add(
+            MethodStage(
+                BuildVerifier(),
+                "verify",
+                "Verify"
             )
         )
 

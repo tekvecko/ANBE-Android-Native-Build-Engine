@@ -71,6 +71,7 @@ def test_pipeline_stage_contract():
         "AAPT2",
         "Executor",
         "Artifacts",
+        "Verify",
         "Export",
         "Report",
         "Manifest",

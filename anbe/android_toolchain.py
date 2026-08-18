@@ -1,46 +1,84 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
+import os
 import subprocess
+from pathlib import Path
 
 
 class AndroidToolchain:
 
-
     def __init__(self):
 
-        self.runtime = Path(
-            "/data/data/com.termux/files/home/ANBE-Runtime-Pack-v0.1/bin"
+        runtime_root = os.environ.get(
+            "ANBE_RUNTIME",
+            str(
+                Path.home()
+                / "ANBE-Runtime-Pack-v0.1"
+            )
+        )
+
+        prefix = os.environ.get(
+            "PREFIX",
+            "/data/data/com.termux/files/usr"
+        )
+
+        self.runtime = (
+            Path(runtime_root)
+            / "bin"
+        )
+
+        self.prefix_bin = (
+            Path(prefix)
+            / "bin"
         )
 
 
     def valid_arm64(self, path):
 
-        try:
-            out = subprocess.check_output(
-                ["file", str(path)],
-                text=True
-            )
+        path = Path(path)
 
-            return "ARM aarch64" in out
+        if not path.exists():
+            return False
+
+        try:
+
+            out = subprocess.check_output(
+                [
+                    "file",
+                    str(path)
+                ],
+                text=True,
+                stderr=subprocess.DEVNULL
+            )
 
         except Exception:
             return False
 
+        return (
+            "ARM aarch64" in out
+            or
+            "ARM64" in out
+        )
+
 
     def get(self, name):
 
-        tool = self.runtime / name
+        candidates = [
+            self.runtime / name,
+            self.prefix_bin / name,
+            Path("/usr/local/bin") / name,
+        ]
 
-        if tool.exists() and self.valid_arm64(tool):
-            return tool
+        for candidate in candidates:
 
-        termux = Path(
-            "/data/data/com.termux/files/usr/bin"
-        ) / name
-
-        if termux.exists() and self.valid_arm64(termux):
-            return termux
+            if (
+                candidate.exists()
+                and
+                candidate.is_file()
+                and
+                self.valid_arm64(candidate)
+            ):
+                return candidate.resolve()
 
         return None
 

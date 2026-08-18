@@ -8,30 +8,131 @@ from ..constants import DOWNLOADS
 
 class ArtifactEngine:
 
+    def expected_artifact(
+        self,
+        ctx
+    ):
+
+        spec = ctx.recipe.get(
+            "artifact"
+        )
+
+        if not isinstance(
+            spec,
+            dict
+        ):
+            return None
+
+        path = spec.get(
+            "path"
+        )
+
+        if not path:
+            return None
+
+        artifact = Path(
+            path
+        )
+
+        if not artifact.is_absolute():
+
+            artifact = (
+                Path(ctx.path)
+                /
+                artifact
+            )
+
+        return artifact
+
+
     def detect(self, ctx):
 
-        candidates = [
-            Path(ctx.path) / "app" / "build" / "outputs" / "apk" / "debug" / "app-debug.apk",
-            Path(ctx.path) / "android" / "app" / "build" / "outputs" / "apk" / "debug" / "app-debug.apk",
-        ]
+        project = Path(
+            ctx.path
+        )
+
+        candidates = []
+
+        expected = self.expected_artifact(
+            ctx
+        )
+
+        if expected is not None:
+
+            candidates.append(
+                expected
+            )
+
+        candidates.extend([
+            (
+                project
+                / "app"
+                / "build"
+                / "outputs"
+                / "apk"
+                / "debug"
+                / "app-debug.apk"
+            ),
+            (
+                project
+                / "android"
+                / "app"
+                / "build"
+                / "outputs"
+                / "apk"
+                / "debug"
+                / "app-debug.apk"
+            ),
+        ])
 
         apk = None
 
+        seen = set()
+
         for candidate in candidates:
-            if candidate.exists():
+
+            candidate = Path(
+                candidate
+            )
+
+            key = str(
+                candidate
+            )
+
+            if key in seen:
+                continue
+
+            seen.add(
+                key
+            )
+
+            if (
+                candidate.exists()
+                and
+                candidate.is_file()
+            ):
+
                 apk = candidate
                 break
 
-        if not apk:
-            for item in Path(ctx.path).rglob("*.apk"):
-                apk = item
-                break
+        if apk is None:
 
-        if apk:
+            for item in project.rglob(
+                "*.apk"
+            ):
 
-            ctx.artifacts.append(
-                apk
-            )
+                if item.is_file():
+
+                    apk = item
+                    break
+
+        if apk is not None:
+
+            if apk not in ctx.artifacts:
+
+                ctx.artifacts.append(
+                    apk
+                )
 
             ctx.log(
                 f"APK detected: {apk}"
@@ -43,6 +144,8 @@ class ArtifactEngine:
                 "APK not produced"
             )
 
+        return ctx
+
 
     def export(self, ctx):
 
@@ -53,17 +156,34 @@ class ArtifactEngine:
 
         for artifact in ctx.artifacts:
 
-            dst = DOWNLOADS / "anbe-build.apk"
+            artifact = Path(
+                artifact
+            )
+
+            if not artifact.exists():
+
+                raise RuntimeError(
+                    f"Artifact missing before export: {artifact}"
+                )
+
+            dst = (
+                DOWNLOADS
+                / "anbe-build.apk"
+            )
 
             shutil.copy2(
                 artifact,
                 dst
             )
 
-            ctx.exports.append(
-                dst
-            )
+            if dst not in ctx.exports:
+
+                ctx.exports.append(
+                    dst
+                )
 
             ctx.log(
                 f"APK exported: {dst}"
             )
+
+        return ctx

@@ -11,15 +11,35 @@ class PluginLoader:
 
         self.plugins = []
 
+
     def load(self):
 
         self.plugins = []
 
-        root = Path(__file__).parent / "plugins"
+        root = (
+            Path(__file__).parent
+            / "plugins"
+        )
 
-        for folder in sorted(root.iterdir()):
+        for folder in sorted(
+            root.iterdir()
+        ):
 
             if not folder.is_dir():
+                continue
+
+            if folder.name.startswith("."):
+                continue
+
+            if folder.name == "__pycache__":
+                continue
+
+            plugin_file = (
+                folder
+                / "plugin.py"
+            )
+
+            if not plugin_file.exists():
                 continue
 
             module = (
@@ -36,13 +56,16 @@ class PluginLoader:
                     .Plugin()
                 )
 
-                self.plugins.append(plugin)
+                self.plugins.append(
+                    plugin
+                )
 
             except Exception:
 
                 traceback.print_exc()
 
         return self.plugins
+
 
     def select(self, ctx):
 
@@ -71,4 +94,3 @@ class PluginLoader:
         raise RuntimeError(
             "No compatible plugin found."
         )
-

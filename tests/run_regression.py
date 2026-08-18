@@ -15,6 +15,11 @@ from tests.test_artifact_regression import (
     test_artifact_detect_and_export,
 )
 
+from tests.test_verifier_regression import (
+    test_build_verifier_success,
+    test_build_verifier_rejects_missing_artifact,
+)
+
 
 def run():
 
@@ -43,6 +48,14 @@ def run():
             "Artifact detect/export",
             test_artifact_detect_and_export,
         ),
+        (
+            "Build verifier success",
+            test_build_verifier_success,
+        ),
+        (
+            "Build verifier rejection",
+            test_build_verifier_rejects_missing_artifact,
+        ),
     ]
 
     print()
@@ -53,15 +66,23 @@ def run():
     for name, fn in checks:
 
         print()
-        print("[TEST]", name)
+        print(
+            "[TEST]",
+            name
+        )
 
         fn()
 
-        print("[PASS]", name)
+        print(
+            "[PASS]",
+            name
+        )
 
     print()
     print("=" * 48)
-    print("ALL ANBE REGRESSION TESTS PASSED")
+    print(
+        "ALL ANBE REGRESSION TESTS PASSED"
+    )
     print("=" * 48)
 
 
