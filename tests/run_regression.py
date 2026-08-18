@@ -20,6 +20,11 @@ from tests.test_verifier_regression import (
     test_build_verifier_rejects_missing_artifact,
 )
 
+from tests.test_preflight_regression import (
+    test_preflight_ready,
+    test_preflight_rejects_missing_project,
+)
+
 
 def run():
 
@@ -55,6 +60,14 @@ def run():
         (
             "Build verifier rejection",
             test_build_verifier_rejects_missing_artifact,
+        ),
+        (
+            "Preflight ready",
+            test_preflight_ready,
+        ),
+        (
+            "Preflight rejection",
+            test_preflight_rejects_missing_project,
         ),
     ]
 
