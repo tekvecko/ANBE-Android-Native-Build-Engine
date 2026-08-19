@@ -1,0 +1,75 @@
+name: Bug report
+description: Report a reproducible ANBE problem
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve ANBE.
+        Please remove all passwords, tokens and signing secrets from logs.
+
+  - type: input
+    id: version
+    attributes:
+      label: ANBE version
+      placeholder: ANBE 2.0.1
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: Android 15 / Termux / ARM64
+    validations:
+      required: true
+
+  - type: input
+    id: framework
+    attributes:
+      label: Project type
+      placeholder: Capacitor / Android / other
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: Which ANBE command did you run?
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Remove all secrets before submitting.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I removed passwords, API tokens and signing secrets.
+          required: true
+        - label: I checked that this issue has not already been reported.
+          required: true

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security policy
+    url: https://github.com/tekvecko/ANBE-Android-Native-Build-Engine/security
+    about: Please use the security guidance for sensitive vulnerabilities.
+  - name: ANBE documentation
+    url: https://github.com/tekvecko/ANBE-Android-Native-Build-Engine#readme
+    about: Review installation, support scope and quick-start instructions.
