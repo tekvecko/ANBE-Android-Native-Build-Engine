@@ -5,6 +5,7 @@ from .gradle_doctor import GradleDoctor
 from .android_cleaner import AndroidCleaner
 from .resource_repair import ResourceRepair
 from .frontend_compatibility import FrontendCompatibility
+from .native_dependency_compatibility import NativeDependencyCompatibility
 
 
 
@@ -18,6 +19,34 @@ class RepairEngine:
             "[>] Running repair pipeline"
         )
 
+
+        native_dependency_compatibility = (
+            NativeDependencyCompatibility()
+            .repair(
+                ctx.path
+            )
+        )
+
+        ctx.runtime[
+            "native_dependency_compatibility"
+        ] = native_dependency_compatibility
+
+        for action in native_dependency_compatibility[
+            "actions"
+        ]:
+
+            if (
+                action[
+                    "type"
+                ]
+                ==
+                "disable_sharp_build"
+            ):
+
+                ctx.log(
+                    "[✓] Disabled unsupported sharp install script "
+                    "on Termux Android ARM64"
+                )
 
         frontend_compatibility = (
             FrontendCompatibility()
