@@ -5,6 +5,7 @@ import json
 
 from .step import RecipeStep
 from .graph import RecipeGraph
+from anbe.package_manager import PackageManagerResolver
 
 
 class RecipeEngine:
@@ -44,15 +45,6 @@ class RecipeEngine:
 
         if package_file.exists():
 
-            recipe[
-                "steps"
-            ].append(
-                RecipeStep.command(
-                    "npm-install",
-                    "npm install",
-                )
-            )
-
             try:
 
                 package = json.loads(
@@ -62,6 +54,63 @@ class RecipeEngine:
             except Exception:
 
                 package = {}
+
+            package_manager_resolver = (
+                PackageManagerResolver()
+            )
+
+            package_manager_info = (
+                package_manager_resolver.detect(
+                    project
+                )
+            )
+
+            package_manager = (
+                package_manager_info[
+                    "name"
+                ]
+            )
+
+            package_commands = (
+                package_manager_resolver.commands(
+                    project
+                )
+            )
+
+            install_command = (
+                package_commands[
+                    "install"
+                ]
+            )
+
+            build_command = (
+                package_commands[
+                    "build"
+                ]
+            )
+
+            capacitor_command = (
+                package_commands[
+                    "capacitor"
+                ]
+            )
+
+            recipe[
+                "package_manager"
+            ] = package_manager
+
+            recipe[
+                "package_manager_info"
+            ] = package_manager_info
+
+            recipe[
+                "steps"
+            ].append(
+                RecipeStep.command(
+                    "npm-install",
+                    install_command,
+                )
+            )
 
             scripts = package.get(
                 "scripts",
@@ -75,7 +124,7 @@ class RecipeEngine:
                 ].append(
                     RecipeStep.command(
                         "npm-build",
-                        "npm run build",
+                        build_command,
                         depends_on=[
                             "npm-install"
                         ],
@@ -109,7 +158,11 @@ class RecipeEngine:
             ].append(
                 RecipeStep.command(
                     "capacitor-sync-android",
-                    "npx cap sync android",
+                    (
+                        capacitor_command
+                        if package_file.exists()
+                        else "npx cap sync android"
+                    ),
                     depends_on=(
                         ["npm-build"]
                         if any(

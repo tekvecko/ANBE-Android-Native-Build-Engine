@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from .gradle_compatibility import GradleCompatibility
+
 
 class GradleDoctor:
 
@@ -36,6 +38,59 @@ class GradleDoctor:
                 "gradlew ready: "
                 + str(gradlew)
             )
+
+            compatibility = (
+                GradleCompatibility()
+                .repair(
+                    gradlew.parent
+                )
+            )
+
+            ctx.runtime[
+                "gradle_compatibility"
+            ] = compatibility
+
+            for action in compatibility[
+                "actions"
+            ]:
+
+                if (
+                    action[
+                        "type"
+                    ]
+                    ==
+                    "distribution_url"
+                ):
+
+                    ctx.log(
+                        "Gradle wrapper URL repaired"
+                    )
+
+                elif (
+                    action[
+                        "type"
+                    ]
+                    ==
+                    "gradle_version"
+                ):
+
+                    ctx.log(
+                        "Gradle wrapper upgraded: "
+                        +
+                        str(
+                            action[
+                                "from"
+                            ]
+                        )
+                        +
+                        " -> "
+                        +
+                        str(
+                            action[
+                                "to"
+                            ]
+                        )
+                    )
 
         properties_candidates = [
             root / "android" / "gradle.properties",

@@ -26,6 +26,11 @@ from tests.test_preflight_regression import (
 )
 
 
+from tests.test_compatibility_regression import (
+    test_compatibility_repair_flow,
+    test_compatibility_repair_flow_idempotent,
+)
+
 
 from tests.test_context_schema import (
     test_context_schema_valid,
@@ -246,6 +251,14 @@ def run():
         (
             "Build verifier rejection",
             test_build_verifier_rejects_missing_artifact,
+        ),
+        (
+            "Compatibility repair flow",
+            test_compatibility_repair_flow,
+        ),
+        (
+            "Compatibility repair idempotency",
+            test_compatibility_repair_flow_idempotent,
         ),
         (
             "Preflight ready",

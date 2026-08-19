@@ -9,6 +9,7 @@ from pathlib import Path
 
 from .android_toolchain import AndroidToolchain
 from .java_resolver import JavaResolver
+from .package_manager import PackageManagerResolver
 
 
 class Preflight:
@@ -17,6 +18,7 @@ class Preflight:
         self,
         java_resolver=None,
         android_toolchain=None,
+        package_manager_resolver=None,
         which=None,
     ):
 
@@ -30,6 +32,12 @@ class Preflight:
             android_toolchain
             or
             AndroidToolchain()
+        )
+
+        self.package_manager_resolver = (
+            package_manager_resolver
+            or
+            PackageManagerResolver()
         )
 
         self.which = (
@@ -271,14 +279,6 @@ class Preflight:
             "node"
         )
 
-        npm = self.which(
-            "npm"
-        )
-
-        npx = self.which(
-            "npx"
-        )
-
         node_required = (
             framework
             in (
@@ -295,25 +295,221 @@ class Preflight:
             required=node_required,
         )
 
-        self._check(
-            checks,
-            "npm",
-            npm is not None,
-            npm,
-            required=node_required,
+        package_manager_info = (
+            self.package_manager_resolver
+            .detect(
+                project
+            )
+            if node_required
+            else {
+                "name":
+                "npm",
+
+                "version":
+                None,
+
+                "source":
+                "default",
+            }
         )
+
+        package_manager = (
+            package_manager_info[
+                "name"
+            ]
+        )
+
+        package_manager_version = (
+            package_manager_info.get(
+                "version"
+            )
+        )
+
+        package_manager_path = (
+            self.which(
+                package_manager
+            )
+            if node_required
+            else None
+        )
+
+        package_manager_message = None
+
+        if (
+            node_required
+            and
+            package_manager_path is None
+        ):
+
+            if package_manager == "pnpm":
+
+                corepack = self.which(
+                    "corepack"
+                )
+
+                if (
+                    corepack
+                    and
+                    package_manager_version
+                ):
+
+                    package_manager_message = (
+                        "Project requires pnpm "
+                        +
+                        package_manager_version
+                        +
+                        ". Try: corepack enable && "
+                        "corepack prepare pnpm@"
+                        +
+                        package_manager_version
+                        +
+                        " --activate"
+                    )
+
+                elif corepack:
+
+                    package_manager_message = (
+                        "Project requires pnpm. "
+                        "Try enabling it with Corepack."
+                    )
+
+                else:
+
+                    package_manager_message = (
+                        "Project requires pnpm but "
+                        "pnpm is not installed."
+                    )
+
+            elif package_manager == "yarn":
+
+                corepack = self.which(
+                    "corepack"
+                )
+
+                if corepack:
+
+                    package_manager_message = (
+                        "Project requires yarn. "
+                        "Try enabling it with Corepack."
+                    )
+
+                else:
+
+                    package_manager_message = (
+                        "Project requires yarn but "
+                        "yarn is not installed."
+                    )
+
+            elif package_manager == "bun":
+
+                package_manager_message = (
+                    "Project requires bun but "
+                    "bun is not installed."
+                )
+
+            else:
+
+                package_manager_message = (
+                    "Project requires npm but "
+                    "npm is not installed."
+                )
 
         self._check(
             checks,
-            "npx",
-            npx is not None,
-            npx,
-            required=(
-                framework
-                ==
-                "capacitor"
+            "package_manager",
+            (
+                package_manager_path is not None
+                if node_required
+                else True
             ),
+            (
+                (
+                    package_manager
+                    +
+                    (
+                        "@"
+                        +
+                        package_manager_version
+                        if package_manager_version
+                        else ""
+                    )
+                    +
+                    (
+                        " -> "
+                        +
+                        str(package_manager_path)
+                        if package_manager_path
+                        else ""
+                    )
+                )
+                if node_required
+                else None
+            ),
+            required=node_required,
+            message=package_manager_message,
         )
+
+        if (
+            framework
+            ==
+            "capacitor"
+        ):
+
+            if package_manager == "npm":
+
+                capacitor_runner = (
+                    self.which(
+                        "npx"
+                    )
+                )
+
+                capacitor_runner_name = (
+                    "npx"
+                )
+
+            elif package_manager == "bun":
+
+                capacitor_runner = (
+                    self.which(
+                        "bunx"
+                    )
+                    or
+                    package_manager_path
+                )
+
+                capacitor_runner_name = (
+                    "bunx"
+                )
+
+            else:
+
+                capacitor_runner = (
+                    package_manager_path
+                )
+
+                capacitor_runner_name = (
+                    package_manager
+                )
+
+            self._check(
+                checks,
+                "capacitor_runner",
+                capacitor_runner is not None,
+                (
+                    capacitor_runner_name
+                    +
+                    (
+                        " -> "
+                        +
+                        str(
+                            capacitor_runner
+                        )
+                        if capacitor_runner
+                        else ""
+                    )
+                ),
+                required=True,
+            )
 
         if android_root:
 
