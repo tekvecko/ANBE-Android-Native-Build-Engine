@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anbe"
+version = "2.0.1"
+description = "Autonomous Android build and release engine"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+authors = [
+    {name = "ANBE contributors"}
+]
+keywords = [
+    "android",
+    "capacitor",
+    "gradle",
+    "termux",
+    "apk",
+    "aab",
+    "build",
+    "release"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Build Tools"
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/tekvecko/ANBE-Android-Native-Build-Engine"
+Repository = "https://github.com/tekvecko/ANBE-Android-Native-Build-Engine"
+Issues = "https://github.com/tekvecko/ANBE-Android-Native-Build-Engine/issues"
+
+[project.scripts]
+anbe = "anbe.cli:main"
+[tool.setuptools.packages.find]
+include = ["anbe*"]

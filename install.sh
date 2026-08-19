@@ -1,19 +1,23 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT"
 
-TARGET="$PREFIX/bin/anbe"
+echo "ANBE installer"
+echo "=============="
+echo
 
+command -v python >/dev/null 2>&1 || {
+    echo "[ERROR] Python is required."
+    exit 1
+}
 
-cp launcher.py "$TARGET"
-
-
-chmod +x "$TARGET"
-
+python -m pip install --upgrade .
 
 echo
-echo "ANBE installed:"
-echo "$TARGET"
+echo "[✓] ANBE installed"
 echo
-echo "Usage:"
-echo "  anbe build ~/project"
-
+echo "Verify with:"
+echo "  anbe --version"
+echo "  anbe doctor <project>"

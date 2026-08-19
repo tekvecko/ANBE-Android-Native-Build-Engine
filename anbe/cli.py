@@ -2,6 +2,8 @@
 
 import sys
 
+from . import __version__
+
 from .orchestrator import Orchestrator
 from .preflight import Preflight
 from .release_signing import ReleaseSigning
@@ -11,6 +13,7 @@ from .launch_report import LaunchReport
 def usage():
 
     print("Usage:")
+    print("  anbe --version")
     print("  anbe build <project>")
     print("  anbe build <project> --release")
     print("  anbe build <project> --release --aab")
@@ -31,6 +34,16 @@ def main():
         return 1
 
     command = args[0]
+
+    if command in ("--version", "version"):
+
+        print(
+            "ANBE "
+            +
+            __version__
+        )
+
+        return 0
 
     if command == "build":
 
