@@ -12,7 +12,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12%2B-blue)](pyproject.toml)
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20Termux%20%7C%20ARM64-green)](#supported-platform)
 
-**[Quick Start](#quick-start) · [Launch](#anbe-launch) · [Architecture](docs/ARCHITECTURE.md) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)**
+**[Quick Start](#quick-start) · [Real-world validation](#real-world-validation) · [Launch](#anbe-launch) · [Architecture](docs/ARCHITECTURE.md) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)**
 
 </div>
 
@@ -22,57 +22,11 @@
 
 Building an Android application is often not a single command.
 
-A real project may require:
-
-- Node.js dependency installation
-- frontend compilation
-- Capacitor synchronization
-- Android project repair
-- Java / Gradle compatibility resolution
-- AAPT2 discovery
-- Gradle execution
-- artifact discovery
-- release signing
-- signature validation
-- APK/AAB export
-- release verification
+A real project may require project detection, Java / Gradle compatibility resolution, AAPT2 discovery, dependency or host compatibility repair, variant selection, Gradle execution, artifact discovery, signing, verification and export.
 
 ANBE turns that chain into one deterministic pipeline.
 
-```text
-project
-   │
-   ▼
-detect ──► analyze ──► plan ──► repair
-                               │
-                               ▼
-                           toolchain
-                               │
-                               ▼
-                             build
-                               │
-                               ▼
-                       artifact discovery
-                               │
-                      ┌────────┴────────┐
-                      ▼                 ▼
-                     APK               AAB
-                      │                 │
-                      ▼                 ▼
-                   verify            verify
-                      │                 │
-                      └────────┬────────┘
-                               ▼
-                           ANBE Launch
-                               │
-                               ▼
-                      release-ready output
-```
-
-> **ANBE is not another Gradle wrapper.**
->
-> It is an orchestration, diagnostics, repair and release layer around
-> the Android build toolchain.
+> **ANBE is not another Gradle wrapper.** It is an orchestration, diagnostics, repair and release layer around the Android build toolchain.
 
 ---
 
@@ -80,23 +34,16 @@ detect ──► analyze ──► plan ──► repair
 
 ```bash
 anbe doctor ~/my-project
+anbe build ~/my-project
+```
+
+For the product-oriented release flow:
+
+```bash
 anbe launch ~/my-project
 ```
 
-ANBE analyzes the project, prepares the toolchain, builds the application,
-verifies the artifact and produces a release-readiness report.
-
-Example:
-
-```text
-ANBE LAUNCH
-================================================
-Application: com.example.app
-Artifact: .../anbe-release.apk
-Readiness: 100/100 READY
-JSON report: reports/launch-report-....json
-TXT report: reports/launch-report-....txt
-```
+ANBE analyzes the project, prepares the toolchain, applies narrowly scoped compatibility repairs where required, executes the appropriate Android build, verifies the artifact and exports the result.
 
 ---
 
@@ -107,26 +54,29 @@ TXT report: reports/launch-report-....txt
 - automatic project detection
 - Capacitor-aware Android discovery
 - structured build recipes
+- Android product-flavor detection and variant-aware task generation
 - dependency graph validation
 - dependency-aware execution planning
 - deterministic pipeline stages
 - formal BuildContext contract
+- progress reporting for long-running builds
 
 ### Android toolchain
 
 - Java / Gradle runtime compatibility resolution
 - Gradle-version-aware JDK selection
 - Android preflight diagnostics
-- ARM64 AAPT2 discovery
+- ARM64 AAPT2 discovery and Termux override
 - Termux-aware Android execution
 - Gradle wrapper preparation and compatibility repair
 - Android repair pipeline
+- incremental Gradle builds without an implicit `clean` before every invocation
 
 ### Self-healing compatibility
 
 ANBE can detect and repair selected build incompatibilities before execution.
 
-Current compatibility repairs include:
+Current compatibility work includes:
 
 - package-manager-aware dependency handling
 - Termux native dependency compatibility
@@ -135,20 +85,26 @@ Current compatibility repairs include:
 - Gradle wrapper compatibility repair
 - Gradle runtime JDK compatibility selection
 - Capacitor / Android compatibility preparation
+- incompatible AndroidX core dependency repair
+- native Termux `protoc` fallback for incompatible Maven protobuf compiler binaries
+- safe Android launcher icon fallback
 
-Repairs are designed to be deterministic, narrowly scoped and idempotent.
-Existing compatible projects are left unchanged.
+Repairs are designed to be deterministic, narrowly scoped and idempotent. Existing compatible projects are left unchanged.
 
 ### Release engineering
 
 - debug APK builds
+- flavored debug APK builds
 - release APK builds
 - Android App Bundle (`.aab`) builds
 - environment-based signing secrets
 - APK signature verification
 - signer certificate SHA-256 fingerprint
 - artifact SHA-256 calculation
+- variant-aware artifact discovery
+- repository-aware artifact naming
 - release artifact export
+- build reports and manifests
 
 ### Product layer
 
@@ -164,6 +120,7 @@ Existing compatible projects are left unchanged.
 
 - portable CI suite
 - full regression suite
+- regression coverage for product flavors and protobuf compatibility
 - isolated Python package installation
 - wheel / sdist distribution
 - Apache-2.0 licensed
@@ -172,12 +129,12 @@ Existing compatible projects are left unchanged.
 
 ## Supported platform
 
-### Stable path
-
 | Component | Status |
 |---|---|
 | Android / Termux | ✅ Stable |
 | ARM64 / aarch64 | ✅ Stable |
+| Native Android Gradle projects | ✅ Validated |
+| Android product flavors | ✅ Validated |
 | Capacitor Android projects | ✅ Stable |
 | Python 3.12+ | ✅ Supported |
 | Debug APK | ✅ Supported |
@@ -189,70 +146,82 @@ Existing compatible projects are left unchanged.
 | Windows | 🧪 Experimental |
 | iOS | ❌ Not supported |
 
-The current stable release is optimized for **Android + Termux + ARM64**.
+The current stable path is optimized for **Android + Termux + ARM64**.
 
-ANBE is designed so broader host and framework support can be added without
-replacing the core pipeline.
+---
+
+## Real-world validation
+
+### Google Now in Android
+
+ANBE has been validated against **Now in Android**, Google's large real-world Android reference application. This is substantially more demanding than a minimal sample: it is a multi-module Kotlin/Compose project using product flavors and a broad modern Android toolchain.
+
+On an ARM64 Android device running Termux, ANBE successfully completed the project's `DemoDebug` build and produced a working application.
+
+Observed validation result:
+
+```text
+Task: :app:assembleDemoDebug
+BUILD SUCCESSFUL
+912 actionable tasks
+APK: app/build/outputs/apk/demo/debug/app-demo-debug.apk
+Export: /storage/emulated/0/Download/nowinandroid.apk
+Approximate APK size: 36 MB
+```
+
+The validation exercised and confirmed several recent ANBE capabilities:
+
+1. product-flavor discovery and selection of `assembleDemoDebug` instead of a generic `assembleDebug` task;
+2. variant-aware discovery of the APK under `app/build/outputs/apk/demo/debug/`;
+3. Termux protobuf compatibility using the native `protoc` executable when a Maven host binary is unsuitable;
+4. Android dependency compatibility repair;
+5. preservation of Gradle incremental state by no longer forcing an implicit `clean` before each build;
+6. artifact verification, repository-aware naming, export, reporting and manifest generation.
+
+The resulting APK was installed and the Now in Android application ran successfully on the Android device.
+
+This test is an important milestone for ANBE: the engine is not limited to toy or template applications; its Android/Termux path has now been exercised against a substantial production-style open-source Android codebase.
 
 ---
 
 ## Installation
 
-Clone the repository:
-
 ```bash
 git clone https://github.com/tekvecko/ANBE-Android-Native-Build-Engine.git
 cd ANBE-Android-Native-Build-Engine
-```
-
-Install ANBE:
-
-```bash
 ./install.sh
-```
-
-Verify:
-
-```bash
 anbe --version
-```
-
-Expected output:
-
-```text
-ANBE 2.0.1
 ```
 
 ---
 
 ## Quick start
 
-### 1. Diagnose
+Diagnose a project:
 
 ```bash
 anbe doctor ~/my-project
 ```
 
-The preflight checks the project, Android structure, Java, Gradle,
-AAPT2 and other build requirements.
-
-### 2. Build a debug APK
+Build a debug APK:
 
 ```bash
 anbe build ~/my-project
 ```
 
-### 3. Build a release APK
+Build a release APK:
 
 ```bash
 anbe release ~/my-project
 ```
 
-### 4. Build an Android App Bundle
+Build an Android App Bundle:
 
 ```bash
 anbe release ~/my-project --aab
 ```
+
+For flavored Android projects, ANBE can derive the appropriate Gradle task and artifact path from the project configuration rather than assuming only `assembleDebug`.
 
 ---
 
@@ -270,25 +239,13 @@ For an Android App Bundle:
 anbe launch ~/my-project --aab
 ```
 
-Launch performs the release build and produces release metadata such as:
-
-- application ID
-- version code
-- version name
-- artifact path
-- artifact size
-- artifact SHA-256
-- release signing state
-- signer certificate fingerprint for verified APKs
-- release readiness score
+Launch performs the release build and produces release metadata such as application ID, version information, artifact path and size, SHA-256, signing state, signer fingerprint for verified APKs and a release readiness score.
 
 ---
 
 ## Secure release signing
 
 ANBE does **not** store release passwords in the repository.
-
-Configure signing through environment variables:
 
 ```bash
 export ANBE_KEYSTORE="$HOME/.anbe/keys/release.jks"
@@ -297,36 +254,15 @@ export ANBE_KEY_ALIAS="..."
 export ANBE_KEY_PASSWORD="..."
 ```
 
-Then:
-
-```bash
-anbe launch ~/my-project
-```
-
-Keep the keystore outside project repositories and maintain a secure backup.
-
-**Never commit signing credentials or production keystores.**
+Keep the keystore outside project repositories and maintain a secure backup. **Never commit signing credentials or production keystores.**
 
 ---
 
 ## Local-first by design
 
-ANBE's current stable workflow runs locally.
+ANBE's current stable workflow runs locally. Source code does not need to be uploaded to a third-party build service just to produce an Android artifact.
 
-Your source code does not need to be uploaded to a third-party build service
-just to produce an Android artifact.
-
-This makes ANBE useful for:
-
-- independent developers
-- local-first development
-- Android-only environments
-- Termux workflows
-- Capacitor-based web applications moving to Android
-- Next.js projects requiring Termux compatibility
-- AI-generated web applications moving to Android
-- reproducible release automation
-- build diagnostics and automated compatibility repair
+This makes ANBE useful for independent developers, Android-only environments, Termux workflows, native Android and Capacitor projects, reproducible release automation, build diagnostics and automated compatibility repair.
 
 ---
 
@@ -358,8 +294,7 @@ Report
 Manifest
 ```
 
-The pipeline is intentionally explicit: every important build transition can
-be validated and regression tested.
+The pipeline is intentionally explicit: every important build transition can be validated and regression tested.
 
 For a deeper overview see **[Architecture](docs/ARCHITECTURE.md)**.
 
@@ -367,35 +302,18 @@ For a deeper overview see **[Architecture](docs/ARCHITECTURE.md)**.
 
 ## Development
 
-Compile the project:
-
 ```bash
 python -m compileall -q anbe tests
-```
-
-Run portable tests:
-
-```bash
 python -m tests.run_ci
-```
-
-Run the full regression suite:
-
-```bash
 python -m tests.run_regression
-```
-
-Build Python distributions:
-
-```bash
 python -m build
 ```
+
+Recent compatibility work is covered by dedicated regression tests, including Android product-flavor handling, protobuf compatibility and Gradle command wiring. The full regression suite is expected to pass before compatibility changes are committed.
 
 ---
 
 ## Project principles
-
-ANBE development follows a few simple rules:
 
 1. **Diagnose before mutating.**
 2. **Prefer deterministic behavior over magic.**
@@ -403,21 +321,13 @@ ANBE development follows a few simple rules:
 4. **Never leak signing secrets into reports or source control.**
 5. **Every architectural change needs regression coverage.**
 6. **A successful Gradle command is not enough — verify the artifact.**
+7. **Compatibility repairs should be targeted, safe and idempotent.**
 
 ---
 
 ## Roadmap
 
-Near-term directions include:
-
-- broader Capacitor project coverage
-- additional Android project layouts
-- broader compatibility repair coverage
-- stronger release readiness analysis
-- reproducible toolchain provisioning
-- additional host platforms
-- GitHub Actions integration
-- optional hosted ANBE build service
+Near-term directions include broader native Android and Capacitor project coverage, additional Android project layouts and flavor configurations, broader compatibility repair coverage, stronger release readiness analysis, reproducible toolchain provisioning, additional host platforms and optional hosted build workflows.
 
 See **[ROADMAP.md](docs/ROADMAP.md)**.
 
@@ -425,34 +335,15 @@ See **[ROADMAP.md](docs/ROADMAP.md)**.
 
 ## Contributing
 
-Contributions are welcome.
-
-Start with:
-
-- [CONTRIBUTING.md](CONTRIBUTING.md)
-- [SUPPORT.md](SUPPORT.md)
-- [SECURITY.md](SECURITY.md)
-- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), [SUPPORT.md](SUPPORT.md), [SECURITY.md](SECURITY.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 Bug reports and feature requests can be submitted through GitHub Issues.
 
 ---
 
-## Security
-
-Release signing is security-sensitive.
-
-Please read **[SECURITY.md](SECURITY.md)** before working with production
-signing material.
-
----
-
 ## License
 
-ANBE is open-source software licensed under the
-**Apache License 2.0**.
-
-See [LICENSE](LICENSE).
+ANBE is open-source software licensed under the **Apache License 2.0**. See [LICENSE](LICENSE).
 
 ---
 
