@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ANBE is an autonomous Android build engine for Termux that builds, repairs, verifies and exports real Android projects directly on Android.">
+  <meta name="theme-color" content="#0b1020">
+  <title>ANBE — Autonomous Android Native Build Engine</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --bg2: #10182d;
+      --panel: rgba(255,255,255,.055);
+      --panel-strong: rgba(255,255,255,.085);
+      --text: #eef3ff;
+      --muted: #aab7d6;
+      --line: rgba(255,255,255,.11);
+      --green: #72f1b8;
+      --blue: #6fb7ff;
+      --violet: #b29cff;
+      --max: 1120px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(111,183,255,.16), transparent 32rem),
+        radial-gradient(circle at 90% 10%, rgba(114,241,184,.12), transparent 30rem),
+        linear-gradient(180deg, var(--bg) 0%, #090d18 100%);
+      line-height: 1.6;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+
+    .wrap { width: min(calc(100% - 40px), var(--max)); margin: 0 auto; }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(11,16,32,.72);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-inner {
+      min-height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand { font-weight: 800; letter-spacing: .14em; }
+    .nav-links { display: flex; flex-wrap: wrap; gap: 20px; color: var(--muted); font-size: .95rem; }
+    .nav-links a:hover { color: var(--text); }
+
+    .hero { padding: 96px 0 72px; }
+    .eyebrow {
+      display: inline-flex;
+      gap: 9px;
+      align-items: center;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 999px;
+      padding: 8px 13px;
+      color: var(--green);
+      font-size: .86rem;
+      font-weight: 700;
+      letter-spacing: .03em;
+    }
+
+    h1 {
+      font-size: clamp(3rem, 8vw, 6.8rem);
+      line-height: .92;
+      margin: 28px 0 24px;
+      letter-spacing: -.055em;
+      max-width: 900px;
+    }
+
+    .gradient {
+      background: linear-gradient(90deg, var(--green), var(--blue), var(--violet));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .lead { max-width: 760px; color: var(--muted); font-size: clamp(1.1rem, 2.5vw, 1.35rem); }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      font-weight: 750;
+      background: var(--panel);
+    }
+
+    .button.primary {
+      color: #06120d;
+      background: var(--green);
+      border-color: transparent;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .terminal, .card {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, var(--panel-strong), var(--panel));
+      box-shadow: 0 24px 80px rgba(0,0,0,.25);
+      border-radius: 18px;
+    }
+
+    .terminal { padding: 0; overflow: hidden; }
+    .terminal-head { padding: 12px 16px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
+    .terminal pre { margin: 0; padding: 22px; overflow-x: auto; color: #d8e4ff; font-size: .9rem; }
+
+    section { padding: 72px 0; }
+    .section-title { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.05; margin: 0 0 14px; letter-spacing: -.035em; }
+    .section-copy { color: var(--muted); max-width: 760px; margin: 0 0 34px; }
+
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card { padding: 24px; }
+    .card h3 { margin: 0 0 10px; font-size: 1.08rem; }
+    .card p { margin: 0; color: var(--muted); }
+
+    .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 24px; }
+    .metric { padding: 22px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); }
+    .metric strong { display: block; font-size: 1.8rem; color: var(--green); }
+    .metric span { color: var(--muted); font-size: .9rem; }
+
+    .validation {
+      border: 1px solid rgba(114,241,184,.22);
+      background: linear-gradient(135deg, rgba(114,241,184,.09), rgba(111,183,255,.07));
+      border-radius: 22px;
+      padding: 32px;
+    }
+
+    .pipeline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: #dbe4fb;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: .88rem;
+    }
+
+    footer { padding: 42px 0 58px; border-top: 1px solid var(--line); color: var(--muted); }
+    .footer-inner { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+
+    @media (max-width: 850px) {
+      .hero-grid, .grid, .metric-grid { grid-template-columns: 1fr; }
+      .hero { padding-top: 68px; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top">ANBE</a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#validation">Validation</a>
+        <a href="#pipeline">Pipeline</a>
+        <a href="ARCHITECTURE.md">Architecture</a>
+        <a href="ROADMAP.md">Roadmap</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="top">
+    <header class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <div class="eyebrow">Android · Termux · ARM64</div>
+          <h1>Build Android. <span class="gradient">On Android.</span></h1>
+          <p class="lead">ANBE is an autonomous Android Native Build Engine that detects, repairs, builds, verifies and exports real Android projects directly from Termux.</p>
+          <div class="actions">
+            <a class="button primary" href="https://github.com/tekvecko/ANBE-Android-Native-Build-Engine">View on GitHub</a>
+            <a class="button" href="https://github.com/tekvecko/ANBE-Android-Native-Build-Engine#quick-start">Quick Start</a>
+          </div>
+        </div>
+
+        <div class="terminal">
+          <div class="terminal-head">ANBE / Termux</div>
+          <pre><code>$ anbe doctor ~/my-project
+READY TO BUILD: YES
+
+$ anbe build ~/my-project
+[✓] Dynamic recipe generated
+[✓] Compatibility repairs applied
+[>] Progress: 50% [android-prepare]
+[…] Still working — 02:00
+[✓] Build verification passed
+[✓] Artifact exported
+
+BUILD FINISHED</code></pre>
+        </div>
+      </div>
+    </header>
+
+    <section id="features">
+      <div class="wrap">
+        <h2 class="section-title">One pipeline around the Android toolchain.</h2>
+        <p class="section-copy">ANBE is not a replacement for Gradle. It is the orchestration, diagnostics, compatibility and release layer around it.</p>
+        <div class="grid">
+          <article class="card"><h3>Build intelligence</h3><p>Project discovery, structured recipes, product-flavor detection, dependency-aware planning and deterministic execution.</p></article>
+          <article class="card"><h3>Termux compatibility</h3><p>JDK selection, Gradle wiring, ARM64 AAPT2 override, protobuf fallback and Android-specific compatibility repair.</p></article>
+          <article class="card"><h3>Release engineering</h3><p>Debug APK, signed release APK, AAB, artifact verification, SHA-256, signature checks, reports and export.</p></article>
+          <article class="card"><h3>Self-healing repairs</h3><p>Narrowly scoped and idempotent fixes for AndroidX, launcher icons, Gradle wrappers, native dependencies and more.</p></article>
+          <article class="card"><h3>Product flavors</h3><p>Variant-aware task generation such as <code>assembleDemoDebug</code> and correct flavored artifact discovery.</p></article>
+          <article class="card"><h3>Long-build visibility</h3><p>Progress reporting and heartbeat output make it obvious that large on-device builds are still alive.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="validation">
+      <div class="wrap">
+        <div class="validation">
+          <div class="eyebrow">Real-world validation</div>
+          <h2 class="section-title" style="margin-top:20px">Google Now in Android — built successfully on-device.</h2>
+          <p class="section-copy">ANBE has been validated against Google's Now in Android reference application: a large multi-module Kotlin/Compose project using product flavors, Hilt, KSP, Room, protobuf, Firebase tooling and a modern Android build stack.</p>
+
+          <div class="metric-grid">
+            <div class="metric"><strong>912</strong><span>actionable Gradle tasks</span></div>
+            <div class="metric"><strong>36 MB</strong><span>resulting DemoDebug APK</span></div>
+            <div class="metric"><strong>DemoDebug</strong><span>variant selected automatically</span></div>
+            <div class="metric"><strong>ARM64</strong><span>Android + Termux host</span></div>
+          </div>
+
+          <div class="terminal" style="margin-top:24px">
+            <div class="terminal-head">Observed result</div>
+            <pre><code>Task: :app:assembleDemoDebug
+BUILD SUCCESSFUL
+912 actionable tasks
+APK: app/build/outputs/apk/demo/debug/app-demo-debug.apk
+Export: /storage/emulated/0/Download/nowinandroid.apk</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pipeline">
+      <div class="wrap">
+        <h2 class="section-title">Explicit by design.</h2>
+        <p class="section-copy">Every important build transition is represented as a stage that can be validated and regression tested.</p>
+        <div class="pipeline">
+          <span class="pill">Cache</span><span class="pill">Detector</span><span class="pill">Analyzer</span><span class="pill">Plugin</span><span class="pill">Profile</span><span class="pill">BuildPlan</span><span class="pill">Runtime</span><span class="pill">Recipe</span><span class="pill">Repair</span><span class="pill">Signing</span><span class="pill">AAPT2</span><span class="pill">Executor</span><span class="pill">Artifacts</span><span class="pill">Signature</span><span class="pill">Verify</span><span class="pill">Export</span><span class="pill">Report</span><span class="pill">Manifest</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2 class="section-title">Start with two commands.</h2>
+        <div class="terminal">
+          <div class="terminal-head">Quick start</div>
+          <pre><code>git clone https://github.com/tekvecko/ANBE-Android-Native-Build-Engine.git
+cd ANBE-Android-Native-Build-Engine
+./install.sh
+
+anbe doctor ~/my-project
+anbe build ~/my-project</code></pre>
+        </div>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/tekvecko/ANBE-Android-Native-Build-Engine">Open repository</a>
+          <a class="button" href="https://github.com/tekvecko/ANBE-Android-Native-Build-Engine/releases">Releases</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <div><strong>ANBE</strong> — Autonomous Android Native Build Engine</div>
+      <div>Apache-2.0 · Android / Termux / ARM64</div>
+    </div>
+  </footer>
+</body>
+</html>
