@@ -44,7 +44,7 @@ def test_gradle_command_wiring():
         + ctx.aapt2
     ) in command
 
-    assert "java-21-openjdk" in command
+    assert "java-17-openjdk" in command
 
     assert "clean assembleDebug" in command
 

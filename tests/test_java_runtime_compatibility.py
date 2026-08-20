@@ -125,7 +125,7 @@ def test_gradle75_uses_java17():
         )
 
 
-def test_gradle82_java21_project_stays_java21():
+def test_gradle82_java21_project_uses_java17_runtime():
 
     with TemporaryDirectory() as tmp:
 
@@ -145,7 +145,7 @@ def test_gradle82_java21_project_stays_java21():
                 root
             )
             ==
-            "/fake/jvm/java-21-openjdk"
+            "/fake/jvm/java-17-openjdk"
         )
 
 

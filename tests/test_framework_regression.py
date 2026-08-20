@@ -23,7 +23,7 @@ def test_java_resolver():
 
     assert resolved is not None
     assert resolved.endswith(
-        "java-21-openjdk"
+        "java-17-openjdk"
     )
 
 

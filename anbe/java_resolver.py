@@ -46,14 +46,30 @@ class JavaResolver:
         root = Path(root)
 
         patterns = [
-            re.compile(
-                r"JavaVersion\.VERSION_(\d+)"
+            (
+                re.compile(
+                    r"JavaVersion\.VERSION_1_(\d+)"
+                ),
+                "legacy",
             ),
-            re.compile(
-                r"JavaLanguageVersion\.of\((\d+)\)"
+            (
+                re.compile(
+                    r"JavaVersion\.VERSION_(\d+)"
+                ),
+                "direct",
             ),
-            re.compile(
-                r"languageVersion\s*=\s*JavaLanguageVersion\.of\((\d+)\)"
+            (
+                re.compile(
+                    r"JavaLanguageVersion\.of\((\d+)\)"
+                ),
+                "direct",
+            ),
+            (
+                re.compile(
+                    r"languageVersion\\s*=\\s*"
+                    r"JavaLanguageVersion\.of\((\d+)\)"
+                ),
+                "direct",
             ),
         ]
 
@@ -78,19 +94,33 @@ class JavaResolver:
             except Exception:
                 continue
 
-            for pattern in patterns:
+            for pattern, kind in patterns:
 
                 for match in pattern.finditer(
                     text
                 ):
+
                     try:
-                        versions.append(
-                            int(
-                                match.group(1)
-                            )
+
+                        value = int(
+                            match.group(1)
                         )
+
                     except Exception:
-                        pass
+
+                        continue
+
+                    if kind == "legacy":
+
+                        versions.append(
+                            value
+                        )
+
+                    else:
+
+                        versions.append(
+                            value
+                        )
 
         if versions:
             return max(versions)
@@ -180,18 +210,53 @@ class JavaResolver:
             return None
 
         if version < (
+            5,
+            0,
+        ):
+
+            return 8
+
+        if version < (
+            7,
+            0,
+        ):
+
+            return 15
+
+        if version < (
+            7,
+            3,
+        ):
+
+            return 16
+
+        if version < (
+            7,
+            5,
+        ):
+
+            return 17
+
+        if version < (
             7,
             6,
         ):
 
-            return 17
+            return 18
+
+        if version < (
+            8,
+            3,
+        ):
+
+            return 19
 
         if version < (
             8,
             5,
         ):
 
-            return 21
+            return 20
 
         return None
 
