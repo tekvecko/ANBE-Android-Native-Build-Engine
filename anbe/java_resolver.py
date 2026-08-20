@@ -132,6 +132,146 @@ class JavaResolver:
         return 17
 
 
+    def version_tuple(
+        self,
+        value,
+    ):
+
+        if not value:
+
+            return ()
+
+        parts = []
+
+        for item in str(value).split(
+            "."
+        ):
+
+            try:
+
+                parts.append(
+                    int(item)
+                )
+
+            except Exception:
+
+                break
+
+        return tuple(
+            parts
+        )
+
+
+    def gradle_runtime_max_java(
+        self,
+        root,
+    ):
+
+        gradle = self.gradle_version(
+            root
+        )
+
+        version = self.version_tuple(
+            gradle
+        )
+
+        if not version:
+
+            return None
+
+        if version < (
+            7,
+            6,
+        ):
+
+            return 17
+
+        if version < (
+            8,
+            5,
+        ):
+
+            return 21
+
+        return None
+
+
+    def runtime_java(
+        self,
+        root,
+    ):
+
+        required = self.required_java(
+            root
+        )
+
+        maximum = self.gradle_runtime_max_java(
+            root
+        )
+
+        candidates = []
+
+        if maximum is not None:
+
+            candidates.append(
+                min(
+                    required,
+                    maximum,
+                )
+            )
+
+            for version in (
+                21,
+                17,
+                11,
+            ):
+
+                if (
+                    version
+                    <=
+                    maximum
+                    and
+                    version
+                    not in candidates
+                ):
+
+                    candidates.append(
+                        version
+                    )
+
+        else:
+
+            candidates.append(
+                required
+            )
+
+            for version in (
+                21,
+                17,
+                11,
+            ):
+
+                if version not in candidates:
+
+                    candidates.append(
+                        version
+                    )
+
+        for version in candidates:
+
+            java = self.find_java(
+                version
+            )
+
+            if java:
+
+                return str(
+                    java
+                )
+
+        return None
+
+
     def find_java(
         self,
         version
@@ -161,24 +301,57 @@ class JavaResolver:
         root
     ):
 
-        root = Path(root)
-
-        required = self.required_java(
+        root = Path(
             root
         )
 
-        java = self.find_java(
-            required
+        runtime = self.runtime_java(
+            root
         )
 
-        if java:
-            return str(java)
+        if runtime:
+
+            return runtime
 
         current = os.environ.get(
             "JAVA_HOME"
         )
 
         if current:
-            return current
+
+            maximum = self.gradle_runtime_max_java(
+                root
+            )
+
+            if maximum is None:
+
+                return current
+
+            match = re.search(
+                r"java-(\\d+)",
+                current,
+            )
+
+            if match:
+
+                try:
+
+                    version = int(
+                        match.group(1)
+                    )
+
+                except Exception:
+
+                    version = None
+
+                if (
+                    version is not None
+                    and
+                    version
+                    <=
+                    maximum
+                ):
+
+                    return current
 
         return None

@@ -6,6 +6,7 @@ from .android_cleaner import AndroidCleaner
 from .resource_repair import ResourceRepair
 from .frontend_compatibility import FrontendCompatibility
 from .native_dependency_compatibility import NativeDependencyCompatibility
+from .case_sensitive_import_compatibility import CaseSensitiveImportCompatibility
 
 
 
@@ -19,6 +20,47 @@ class RepairEngine:
             "[>] Running repair pipeline"
         )
 
+
+        case_sensitive_import_compatibility = (
+            CaseSensitiveImportCompatibility()
+            .repair(
+                ctx.path
+            )
+        )
+
+        ctx.runtime[
+            "case_sensitive_import_compatibility"
+        ] = case_sensitive_import_compatibility
+
+        for action in case_sensitive_import_compatibility[
+            "actions"
+        ]:
+
+            if (
+                action[
+                    "type"
+                ]
+                ==
+                "case_sensitive_import"
+            ):
+
+                ctx.log(
+                    "[✓] Case-sensitive import repaired: "
+                    +
+                    str(
+                        action[
+                            "from"
+                        ]
+                    )
+                    +
+                    " -> "
+                    +
+                    str(
+                        action[
+                            "to"
+                        ]
+                    )
+                )
 
         native_dependency_compatibility = (
             NativeDependencyCompatibility()
