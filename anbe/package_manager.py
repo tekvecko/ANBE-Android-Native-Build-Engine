@@ -3,8 +3,22 @@
 import json
 from pathlib import Path
 
+from .host_environment import HostEnvironment
+
 
 class PackageManagerResolver:
+
+    def __init__(
+        self,
+        host_environment=None,
+    ):
+
+        self.host_environment = (
+            host_environment
+            or
+            HostEnvironment()
+        )
+
 
     SUPPORTED = (
         "npm",
@@ -181,6 +195,192 @@ class PackageManagerResolver:
         }
 
 
+    def termux_android_arm64(
+        self,
+    ):
+
+        host = (
+            self.host_environment
+            .inspect()
+        )
+
+        return (
+            host.get(
+                "termux"
+            )
+            and
+            host.get(
+                "android"
+            )
+            and
+            host.get(
+                "arm64"
+            )
+        )
+
+
+    def has_dependency(
+        self,
+        project,
+        name,
+    ):
+
+        package = self.package(
+            project
+        )
+
+        for section in (
+            "dependencies",
+            "devDependencies",
+            "optionalDependencies",
+        ):
+
+            values = package.get(
+                section,
+                {}
+            )
+
+            if (
+                isinstance(
+                    values,
+                    dict
+                )
+                and
+                name
+                in values
+            ):
+
+                return True
+
+        return False
+
+
+    def lockfile_contains(
+        self,
+        project,
+        text,
+    ):
+
+        project = Path(
+            project
+        )
+
+        for name in (
+            "package-lock.json",
+            "npm-shrinkwrap.json",
+        ):
+
+            path = (
+                project
+                /
+                name
+            )
+
+            if not path.exists():
+
+                continue
+
+            try:
+
+                data = path.read_text(
+                    errors="ignore"
+                )
+
+            except Exception:
+
+                continue
+
+            if text in data:
+
+                return True
+
+        return False
+
+
+    def needs_termux_npm_compatibility(
+        self,
+        project,
+    ):
+
+        if not self.termux_android_arm64():
+
+            return False
+
+        if self.has_dependency(
+            project,
+            "puppeteer",
+        ):
+
+            return True
+
+        for marker in (
+            '"node_modules/lmdb"',
+            '"node_modules/@parcel/watcher"',
+        ):
+
+            if self.lockfile_contains(
+                project,
+                marker,
+            ):
+
+                return True
+
+        return False
+
+
+    def npm_lockfile(
+        self,
+        project,
+    ):
+
+        project = Path(
+            project
+        )
+
+        for name in (
+            "package-lock.json",
+            "npm-shrinkwrap.json",
+        ):
+
+            path = (
+                project
+                /
+                name
+            )
+
+            if path.exists():
+
+                return path
+
+        return None
+
+
+    def npm_install_command(
+        self,
+        project,
+    ):
+
+        if self.needs_termux_npm_compatibility(
+            project
+        ):
+
+            if self.npm_lockfile(
+                project
+            ):
+
+                return (
+                    "PUPPETEER_SKIP_DOWNLOAD=true "
+                    "npm ci --omit=optional"
+                )
+
+            return (
+                "PUPPETEER_SKIP_DOWNLOAD=true "
+                "npm install --omit=optional"
+            )
+
+        return "npm install"
+
+
     def commands(
         self,
         project
@@ -235,7 +435,9 @@ class PackageManagerResolver:
 
         return {
             "install":
-            "npm install",
+            self.npm_install_command(
+                project
+            ),
 
             "build":
             "npm run build",
