@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.1.0
+
+Real-world Android compatibility and build UX release.
+
+- flavored Android build detection and variant-aware Gradle task generation
+- variant-aware APK artifact paths and repository-aware export naming
+- Termux native `protoc` compatibility repair for incompatible Maven compiler binaries
+- AndroidX core dependency compatibility repair
+- safe Android launcher icon fallback
+- progress reporting and heartbeat output for long-running builds
+- incremental Gradle execution without an implicit `clean` before every build
+- debug signing bridge skip and release-signing safety improvements
+- successful on-device validation against Google's Now in Android `demoDebug` variant
+- GitHub Pages project landing page and refreshed public repository presentation
+
 ## 2.0.1
 
 Open-source stable release hardening.

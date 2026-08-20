@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "anbe"
-version = "2.0.1"
+version = "2.1.0"
 description = "Autonomous Android build and release engine"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -33,7 +33,7 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/tekvecko/ANBE-Android-Native-Build-Engine"
+Homepage = "https://tekvecko.github.io/ANBE-Android-Native-Build-Engine/"
 Repository = "https://github.com/tekvecko/ANBE-Android-Native-Build-Engine"
 Issues = "https://github.com/tekvecko/ANBE-Android-Native-Build-Engine/issues"
 
