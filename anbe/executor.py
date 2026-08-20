@@ -215,8 +215,6 @@ class Executor:
                 )
 
         command += (
-            "clean "
-            +
             str(task)
             +
             " --no-daemon "

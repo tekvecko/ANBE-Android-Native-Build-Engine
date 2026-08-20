@@ -46,7 +46,9 @@ def test_gradle_command_wiring():
 
     assert "java-17-openjdk" in command
 
-    assert "clean assembleDebug" in command
+    assert "assembleDebug" in command
+
+    assert "clean assembleDebug" not in command
 
 
 if __name__ == "__main__":

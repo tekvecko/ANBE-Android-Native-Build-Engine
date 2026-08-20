@@ -10,6 +10,156 @@ from anbe.package_manager import PackageManagerResolver
 
 class RecipeEngine:
 
+    def android_flavors(
+        self,
+        android_root,
+    ):
+
+        root = Path(
+            android_root
+        )
+
+        names = []
+
+        patterns = (
+            r'register\(\s*["\']([A-Za-z0-9_-]+)["\']\s*\)',
+            r'create\(\s*["\']([A-Za-z0-9_-]+)["\']\s*\)',
+            r'productFlavors\s*\{',
+        )
+
+        files = []
+
+        for pattern in (
+            "*.gradle",
+            "*.gradle.kts",
+            "*.kt",
+            "*.kts",
+        ):
+
+            files.extend(
+                root.rglob(
+                    pattern
+                )
+            )
+
+        for path in files:
+
+            try:
+
+                text = path.read_text(
+                    errors="ignore"
+                )
+
+            except Exception:
+
+                continue
+
+            if (
+                "productFlavors"
+                not in text
+                and
+                "Flavor"
+                not in text
+            ):
+
+                continue
+
+            for regex in patterns[:2]:
+
+                import re
+
+                for match in re.finditer(
+                    regex,
+                    text,
+                ):
+
+                    value = match.group(1)
+
+                    if (
+                        value
+                        not in names
+                    ):
+
+                        names.append(
+                            value
+                        )
+
+            if (
+                "enum class NiaFlavor"
+                in text
+            ):
+
+                import re
+
+                block = re.search(
+                    r'enum class NiaFlavor[^{]*\{([^}]+)\}',
+                    text,
+                    re.DOTALL,
+                )
+
+                if block:
+
+                    for match in re.finditer(
+                        r'^\s*([A-Za-z][A-Za-z0-9_]*)\s*\(',
+                        block.group(1),
+                        re.MULTILINE,
+                    ):
+
+                        value = match.group(1)
+
+                        if (
+                            value
+                            not in names
+                        ):
+
+                            names.append(
+                                value
+                            )
+
+        return names
+
+
+    def preferred_android_flavor(
+        self,
+        android_root,
+    ):
+
+        flavors = self.android_flavors(
+            android_root
+        )
+
+        if "demo" in flavors:
+
+            return "demo"
+
+        return None
+
+
+    def variant_name(
+        self,
+        flavor,
+        build_mode,
+    ):
+
+        suffix = (
+            "Release"
+            if build_mode == "release"
+            else "Debug"
+        )
+
+        if not flavor:
+
+            return suffix
+
+        return (
+            str(flavor)[:1].upper()
+            +
+            str(flavor)[1:]
+            +
+            suffix
+        )
+
+
     def generate(self, ctx):
 
         project = Path(
@@ -287,18 +437,39 @@ class RecipeEngine:
                 "apk"
             )
 
+            flavor = (
+                self.preferred_android_flavor(
+                    android_root
+                )
+            )
+
+            variant = self.variant_name(
+                flavor,
+                build_mode,
+            )
+
             if build_mode == "release":
 
                 gradle_task = (
-                    "bundleRelease"
+                    (
+                        "bundle"
+                        +
+                        variant
+                    )
                     if artifact_format == "aab"
-                    else "assembleRelease"
+                    else (
+                        "assemble"
+                        +
+                        variant
+                    )
                 )
 
             else:
 
                 gradle_task = (
-                    "assembleDebug"
+                    "assemble"
+                    +
+                    variant
                 )
 
             recipe[
@@ -330,10 +501,26 @@ class RecipeEngine:
 
             if build_mode == "debug":
 
-                artifact_suffix = (
-                    "app/build/outputs/apk/"
-                    "debug/app-debug.apk"
-                )
+                if flavor:
+
+                    artifact_suffix = (
+                        "app/build/outputs/apk/"
+                        +
+                        flavor
+                        +
+                        "/debug/app-"
+                        +
+                        flavor
+                        +
+                        "-debug.apk"
+                    )
+
+                else:
+
+                    artifact_suffix = (
+                        "app/build/outputs/apk/"
+                        "debug/app-debug.apk"
+                    )
 
                 artifact_type = "apk"
 
@@ -355,8 +542,22 @@ class RecipeEngine:
                 if signing.configured():
 
                     artifact_suffix = (
-                        "app/build/outputs/apk/"
-                        "release/app-release.apk"
+                        (
+                            "app/build/outputs/apk/"
+                            +
+                            flavor
+                            +
+                            "/release/app-"
+                            +
+                            flavor
+                            +
+                            "-release.apk"
+                        )
+                        if flavor
+                        else (
+                            "app/build/outputs/apk/"
+                            "release/app-release.apk"
+                        )
                     )
 
                 else:
