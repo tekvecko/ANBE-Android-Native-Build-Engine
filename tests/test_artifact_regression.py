@@ -84,9 +84,17 @@ def test_artifact_detect_and_export():
                 ctx.exports[0]
             )
 
+            expected_name = (
+                engine.export_name(
+                    ctx,
+                    apk,
+                )
+            )
+
             assert exported == (
                 export_dir
-                / "anbe-build.apk"
+                /
+                expected_name
             )
 
             assert exported.exists()

@@ -245,6 +245,79 @@ class Executor:
         return root
 
 
+    def progress_percent(
+        self,
+        completed,
+        total,
+    ):
+
+        if total <= 0:
+
+            return 100
+
+        value = int(
+            round(
+                (
+                    completed
+                    /
+                    total
+                )
+                *
+                100
+            )
+        )
+
+        return max(
+            0,
+            min(
+                100,
+                value,
+            ),
+        )
+
+
+    def report_progress(
+        self,
+        ctx,
+        completed,
+        total,
+        step=None,
+    ):
+
+        percent = self.progress_percent(
+            completed,
+            total,
+        )
+
+        message = (
+            "Progress: "
+            +
+            str(percent)
+            +
+            "%"
+        )
+
+        if step:
+
+            step_id = step.get(
+                "id"
+            )
+
+            if step_id:
+
+                message += (
+                    " ["
+                    +
+                    str(step_id)
+                    +
+                    "]"
+                )
+
+        ctx.info(
+            message
+        )
+
+
     def execute(
         self,
         ctx
@@ -330,6 +403,18 @@ class Executor:
             " step(s)"
         )
 
+        total_steps = len(
+            steps
+        )
+
+        completed_steps = 0
+
+        self.report_progress(
+            ctx,
+            completed_steps,
+            total_steps,
+        )
+
         for step in steps:
 
             step_type = step[
@@ -353,6 +438,15 @@ class Executor:
                     cwd=str(cwd)
                 )
 
+                completed_steps += 1
+
+                self.report_progress(
+                    ctx,
+                    completed_steps,
+                    total_steps,
+                    step=step,
+                )
+
                 continue
 
             if (
@@ -364,6 +458,15 @@ class Executor:
                 ctx.info(
                     "Android preparation "
                     "already handled"
+                )
+
+                completed_steps += 1
+
+                self.report_progress(
+                    ctx,
+                    completed_steps,
+                    total_steps,
+                    step=step,
                 )
 
                 continue
@@ -413,6 +516,15 @@ class Executor:
                 queue.add(
                     command,
                     cwd=str(android)
+                )
+
+                completed_steps += 1
+
+                self.report_progress(
+                    ctx,
+                    completed_steps,
+                    total_steps,
+                    step=step,
                 )
 
                 continue

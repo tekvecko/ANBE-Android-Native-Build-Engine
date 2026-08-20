@@ -1,12 +1,148 @@
 #!/data/data/com.termux/files/usr/bin/python3
 
 from pathlib import Path
+import re
 import shutil
 
 from ..constants import DOWNLOADS
 
 
 class ArtifactEngine:
+
+    def repository_name(
+        self,
+        ctx,
+    ):
+
+        project = Path(
+            ctx.path
+        )
+
+        git_config = (
+            project
+            /
+            ".git"
+            /
+            "config"
+        )
+
+        if git_config.exists():
+
+            try:
+
+                text = git_config.read_text(
+                    errors="ignore"
+                )
+
+            except Exception:
+
+                text = ""
+
+            remote = re.search(
+                r'url\s*=\s*(.+)',
+                text,
+            )
+
+            if remote:
+
+                url = (
+                    remote.group(1)
+                    .strip()
+                    .rstrip("/")
+                )
+
+                name = re.split(
+                    r"[/\\\\:]",
+                    url,
+                )[-1]
+
+                if name.endswith(
+                    ".git"
+                ):
+
+                    name = name[:-4]
+
+                name = self.sanitize_name(
+                    name
+                )
+
+                if name:
+
+                    return name
+
+        return self.sanitize_name(
+            project.name
+        )
+
+
+    def sanitize_name(
+        self,
+        value,
+    ):
+
+        value = str(
+            value
+            or
+            ""
+        ).strip()
+
+        value = re.sub(
+            r"[^A-Za-z0-9._-]+",
+            "-",
+            value,
+        )
+
+        value = re.sub(
+            r"-+",
+            "-",
+            value,
+        )
+
+        return value.strip(
+            ".-_"
+        )
+
+
+    def export_name(
+        self,
+        ctx,
+        artifact,
+    ):
+
+        artifact = Path(
+            artifact
+        )
+
+        project_name = (
+            self.repository_name(
+                ctx
+            )
+            or
+            "anbe-build"
+        )
+
+        mode = getattr(
+            ctx,
+            "build_mode",
+            "debug"
+        )
+
+        if mode == "release":
+
+            return (
+                project_name
+                +
+                "-release"
+                +
+                artifact.suffix.lower()
+            )
+
+        return (
+            project_name
+            +
+            artifact.suffix.lower()
+        )
+
 
     def expected_artifact(
         self,
@@ -178,21 +314,10 @@ class ArtifactEngine:
                     suffix
                 )
 
-            if mode == "release":
-
-                name = (
-                    "anbe-release"
-                    +
-                    suffix
-                )
-
-            else:
-
-                name = (
-                    "anbe-build"
-                    +
-                    suffix
-                )
+            name = self.export_name(
+                ctx,
+                artifact,
+            )
 
             dst = (
                 DOWNLOADS
