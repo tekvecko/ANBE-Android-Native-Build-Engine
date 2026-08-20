@@ -59,9 +59,67 @@ class Executor:
             ctx
         )
 
-        java = JavaResolver().resolve(
+        java_resolver = JavaResolver()
+
+        java = java_resolver.resolve(
             android
         )
+
+        if not java:
+
+            gradle_version = (
+                java_resolver.gradle_version(
+                    android
+                )
+            )
+
+            required_java = (
+                java_resolver.required_java(
+                    android
+                )
+            )
+
+            maximum_java = (
+                java_resolver.gradle_runtime_max_java(
+                    android
+                )
+            )
+
+            message = (
+                "Compatible Java runtime unavailable"
+            )
+
+            if gradle_version:
+
+                message += (
+                    " for Gradle "
+                    +
+                    str(
+                        gradle_version
+                    )
+                )
+
+            message += (
+                "; project Java target: "
+                +
+                str(
+                    required_java
+                )
+            )
+
+            if maximum_java is not None:
+
+                message += (
+                    "; maximum Gradle runtime Java: "
+                    +
+                    str(
+                        maximum_java
+                    )
+                )
+
+            raise RuntimeError(
+                message
+            )
 
         aapt2 = (
             ctx.runtime.get(

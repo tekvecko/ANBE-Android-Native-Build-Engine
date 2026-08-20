@@ -355,6 +355,201 @@ class PackageManagerResolver:
         return None
 
 
+    def dependency_version(
+        self,
+        project,
+        name,
+    ):
+
+        package = self.package(
+            project
+        )
+
+        for section in (
+            "dependencies",
+            "devDependencies",
+            "optionalDependencies",
+        ):
+
+            values = package.get(
+                section,
+                {}
+            )
+
+            if not isinstance(
+                values,
+                dict
+            ):
+
+                continue
+
+            version = values.get(
+                name
+            )
+
+            if version:
+
+                return str(
+                    version
+                )
+
+        return None
+
+
+    def version_major(
+        self,
+        value,
+    ):
+
+        if not value:
+
+            return None
+
+        import re
+
+        match = re.search(
+            r"(\d+)",
+            str(
+                value
+            ),
+        )
+
+        if not match:
+
+            return None
+
+        return int(
+            match.group(1)
+        )
+
+
+    def lockfile_package_version(
+        self,
+        project,
+        package_name,
+    ):
+
+        import json
+
+        project = Path(
+            project
+        )
+
+        for name in (
+            "package-lock.json",
+            "npm-shrinkwrap.json",
+        ):
+
+            path = (
+                project
+                /
+                name
+            )
+
+            if not path.exists():
+
+                continue
+
+            try:
+
+                data = json.loads(
+                    path.read_text()
+                )
+
+            except Exception:
+
+                continue
+
+            packages = data.get(
+                "packages",
+                {}
+            )
+
+            entry = packages.get(
+                "node_modules/"
+                +
+                package_name
+            )
+
+            if isinstance(
+                entry,
+                dict
+            ):
+
+                version = entry.get(
+                    "version"
+                )
+
+                if version:
+
+                    return str(
+                        version
+                    )
+
+        return None
+
+
+    def needs_legacy_openssl_provider(
+        self,
+        project,
+    ):
+
+        angular = self.dependency_version(
+            project,
+            "@angular-devkit/build-angular",
+        )
+
+        angular_major = self.version_major(
+            angular
+        )
+
+        webpack = self.lockfile_package_version(
+            project,
+            "webpack",
+        )
+
+        webpack_major = self.version_major(
+            webpack
+        )
+
+        if (
+            angular_major is None
+            or
+            webpack_major is None
+        ):
+
+            return False
+
+        return (
+            angular_major
+            <=
+            12
+            and
+            webpack_major
+            ==
+            5
+        )
+
+
+    def build_command(
+        self,
+        project,
+        command,
+    ):
+
+        if self.needs_legacy_openssl_provider(
+            project
+        ):
+
+            return (
+                "NODE_OPTIONS=--openssl-legacy-provider "
+                +
+                command
+            )
+
+        return command
+
+
     def npm_install_command(
         self,
         project,
@@ -401,7 +596,10 @@ class PackageManagerResolver:
                 "pnpm install",
 
                 "build":
-                "pnpm run build",
+                self.build_command(
+                    project,
+                    "pnpm run build",
+                ),
 
                 "capacitor":
                 "pnpm exec cap sync android",
@@ -414,7 +612,10 @@ class PackageManagerResolver:
                 "yarn install",
 
                 "build":
-                "yarn build",
+                self.build_command(
+                    project,
+                    "yarn build",
+                ),
 
                 "capacitor":
                 "yarn exec cap sync android",
@@ -427,7 +628,10 @@ class PackageManagerResolver:
                 "bun install",
 
                 "build":
-                "bun run build",
+                self.build_command(
+                    project,
+                    "bun run build",
+                ),
 
                 "capacitor":
                 "bunx cap sync android",
@@ -440,7 +644,10 @@ class PackageManagerResolver:
             ),
 
             "build":
-            "npm run build",
+            self.build_command(
+                project,
+                "npm run build",
+            ),
 
             "capacitor":
             "npx cap sync android",
