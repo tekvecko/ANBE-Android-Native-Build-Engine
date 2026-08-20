@@ -7,6 +7,7 @@ from .resource_repair import ResourceRepair
 from .frontend_compatibility import FrontendCompatibility
 from .native_dependency_compatibility import NativeDependencyCompatibility
 from .case_sensitive_import_compatibility import CaseSensitiveImportCompatibility
+from .android_dependency_compatibility import AndroidDependencyCompatibility
 
 
 
@@ -192,6 +193,48 @@ class RepairEngine:
                 ctx.log(
                     "[✓] Next.js Viewport type compatibility applied"
                 )
+
+        android_dependency_compatibility = (
+            AndroidDependencyCompatibility()
+            .repair(
+                ctx.path
+            )
+        )
+
+        ctx.runtime[
+            "android_dependency_compatibility"
+        ] = android_dependency_compatibility
+
+        for action in android_dependency_compatibility[
+            "actions"
+        ]:
+
+            if (
+                action[
+                    "type"
+                ]
+                ==
+                "androidx_core_ktx_pin"
+            ):
+
+                ctx.log(
+                    "[✓] AndroidX core-ktx compatibility applied: "
+                    +
+                    str(
+                        action[
+                            "from"
+                        ]
+                    )
+                    +
+                    " -> "
+                    +
+                    str(
+                        action[
+                            "to"
+                        ]
+                    )
+                )
+
 
         GradleDoctor().repair(
             ctx
