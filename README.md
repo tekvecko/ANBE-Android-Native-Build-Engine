@@ -114,12 +114,30 @@ TXT report: reports/launch-report-....txt
 
 ### Android toolchain
 
-- Java / Gradle compatibility resolution
+- Java / Gradle runtime compatibility resolution
+- Gradle-version-aware JDK selection
 - Android preflight diagnostics
 - ARM64 AAPT2 discovery
 - Termux-aware Android execution
-- Gradle wrapper preparation
+- Gradle wrapper preparation and compatibility repair
 - Android repair pipeline
+
+### Self-healing compatibility
+
+ANBE can detect and repair selected build incompatibilities before execution.
+
+Current compatibility repairs include:
+
+- package-manager-aware dependency handling
+- Termux native dependency compatibility
+- Next.js compatibility on Termux, including static-build handling
+- case-sensitive JavaScript / TypeScript import repair
+- Gradle wrapper compatibility repair
+- Gradle runtime JDK compatibility selection
+- Capacitor / Android compatibility preparation
+
+Repairs are designed to be deterministic, narrowly scoped and idempotent.
+Existing compatible projects are left unchanged.
 
 ### Release engineering
 
@@ -304,9 +322,11 @@ This makes ANBE useful for:
 - local-first development
 - Android-only environments
 - Termux workflows
+- Capacitor-based web applications moving to Android
+- Next.js projects requiring Termux compatibility
 - AI-generated web applications moving to Android
 - reproducible release automation
-- build diagnostics and repair experiments
+- build diagnostics and automated compatibility repair
 
 ---
 
@@ -392,8 +412,8 @@ Near-term directions include:
 
 - broader Capacitor project coverage
 - additional Android project layouts
+- broader compatibility repair coverage
 - stronger release readiness analysis
-- improved diagnostics and self-repair
 - reproducible toolchain provisioning
 - additional host platforms
 - GitHub Actions integration
