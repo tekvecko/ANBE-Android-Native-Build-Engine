@@ -91,6 +91,14 @@ from tests.test_release_secret_safety import (
 )
 
 
+from tests.test_next_compatibility import (
+    test_next14_termux_repair,
+    test_next_repair_idempotent,
+    test_next14_non_termux_unchanged,
+    test_next13_unchanged,
+    test_next14_without_static_export_unchanged,
+)
+
 from tests.test_launch_report import (
     test_launch_identity,
     test_launch_artifact_metadata,
@@ -100,6 +108,26 @@ from tests.test_launch_report import (
 def run():
 
     checks = [
+        (
+            "Next 14 Termux compatibility",
+            test_next14_termux_repair,
+        ),
+        (
+            "Next compatibility idempotency",
+            test_next_repair_idempotent,
+        ),
+        (
+            "Next non-Termux safety",
+            test_next14_non_termux_unchanged,
+        ),
+        (
+            "Next 13 compatibility safety",
+            test_next13_unchanged,
+        ),
+        (
+            "Next non-static safety",
+            test_next14_without_static_export_unchanged,
+        ),
         (
             "Launch app identity",
             test_launch_identity,

@@ -4,8 +4,22 @@ import json
 import re
 from pathlib import Path
 
+from .host_environment import HostEnvironment
+
 
 class FrontendCompatibility:
+
+    def __init__(
+        self,
+        host_environment=None,
+    ):
+
+        self.host_environment = (
+            host_environment
+            or
+            HostEnvironment()
+        )
+
 
     def package_file(
         self,
@@ -219,6 +233,332 @@ class FrontendCompatibility:
         return match.group(1)
 
 
+    def next_version(
+        self,
+        project,
+    ):
+
+        package = self.package(
+            project
+        )
+
+        for section in (
+            "dependencies",
+            "devDependencies",
+        ):
+
+            values = package.get(
+                section,
+                {}
+            )
+
+            version = values.get(
+                "next"
+            )
+
+            if version:
+
+                return str(
+                    version
+                )
+
+        return None
+
+
+    def next_major(
+        self,
+        project,
+    ):
+
+        version = self.next_version(
+            project
+        )
+
+        if not version:
+
+            return None
+
+        match = re.search(
+            r"(\d+)",
+            version,
+        )
+
+        if not match:
+
+            return None
+
+        return int(
+            match.group(1)
+        )
+
+
+    def next_config(
+        self,
+        project,
+    ):
+
+        project = Path(
+            project
+        )
+
+        for name in (
+            "next.config.js",
+            "next.config.cjs",
+            "next.config.mjs",
+        ):
+
+            path = (
+                project
+                /
+                name
+            )
+
+            if path.exists():
+
+                return path
+
+        return None
+
+
+    def next_static_export(
+        self,
+        project,
+    ):
+
+        path = self.next_config(
+            project
+        )
+
+        if not path:
+
+            return False
+
+        try:
+
+            text = path.read_text(
+                errors="ignore"
+            )
+
+        except Exception:
+
+            return False
+
+        return (
+            re.search(
+                r"""output\s*:\s*["']export["']""",
+                text,
+            )
+            is not None
+        )
+
+
+    def pin_next_version(
+        self,
+        project,
+        version,
+    ):
+
+        path = self.package_file(
+            project
+        )
+
+        package = self.package(
+            project
+        )
+
+        changed = False
+
+        for section in (
+            "dependencies",
+            "devDependencies",
+        ):
+
+            values = package.get(
+                section
+            )
+
+            if not isinstance(
+                values,
+                dict
+            ):
+
+                continue
+
+            if (
+                "next"
+                in values
+            ):
+
+                if (
+                    values[
+                        "next"
+                    ]
+                    !=
+                    version
+                ):
+
+                    values[
+                        "next"
+                    ] = version
+
+                    changed = True
+
+                break
+
+        if not changed:
+
+            return False
+
+        path.write_text(
+            json.dumps(
+                package,
+                indent=2,
+                ensure_ascii=False,
+            )
+            +
+            "\n"
+        )
+
+        return True
+
+
+    def next_layout_files(
+        self,
+        project,
+    ):
+
+        project = Path(
+            project
+        )
+
+        files = []
+
+        for root in (
+            project / "app",
+            project / "src" / "app",
+        ):
+
+            if not root.exists():
+
+                continue
+
+            files.extend(
+                root.rglob(
+                    "layout.tsx"
+                )
+            )
+
+            files.extend(
+                root.rglob(
+                    "layout.ts"
+                )
+            )
+
+        return files
+
+
+    def remove_next14_viewport_type(
+        self,
+        project,
+    ):
+
+        changed_files = []
+
+        for path in self.next_layout_files(
+            project
+        ):
+
+            try:
+
+                text = path.read_text(
+                    errors="ignore"
+                )
+
+            except Exception:
+
+                continue
+
+            original = text
+
+            text = re.sub(
+                (
+                    r"import\s+type\s*\{"
+                    r"([^}]*)"
+                    r"\}\s+from\s+"
+                    r"([\"'])next\2;"
+                ),
+                self._remove_viewport_from_import,
+                text,
+                count=1,
+            )
+
+            text = re.sub(
+                (
+                    r"export\s+const\s+viewport"
+                    r"\s*:\s*Viewport"
+                    r"\s*="
+                ),
+                "export const viewport =",
+                text,
+            )
+
+            if text != original:
+
+                path.write_text(
+                    text
+                )
+
+                changed_files.append(
+                    str(path)
+                )
+
+        return changed_files
+
+
+    def _remove_viewport_from_import(
+        self,
+        match,
+    ):
+
+        names = [
+            item.strip()
+            for item in match.group(1).split(
+                ","
+            )
+            if item.strip()
+        ]
+
+        names = [
+            item
+            for item in names
+            if item != "Viewport"
+        ]
+
+        quote = match.group(2)
+
+        if not names:
+
+            return ""
+
+        return (
+            "import type { "
+            +
+            ", ".join(
+                names
+            )
+            +
+            " } from "
+            +
+            quote
+            +
+            "next"
+            +
+            quote
+            +
+            ";"
+        )
+
+
     def inspect(
         self,
         project,
@@ -251,6 +591,25 @@ class FrontendCompatibility:
             self.capacitor_web_dir(
                 project
             ),
+
+            "next_version":
+            self.next_version(
+                project
+            ),
+
+            "next_major":
+            self.next_major(
+                project
+            ),
+
+            "next_static_export":
+            self.next_static_export(
+                project
+            ),
+
+            "host":
+            self.host_environment
+            .inspect(),
         }
 
 
@@ -487,7 +846,11 @@ class FrontendCompatibility:
 
         actions = []
 
-        should_repair = (
+        # ---------------------------------------------
+        # SvelteKit + Capacitor static compatibility
+        # ---------------------------------------------
+
+        svelte_repair = (
             before[
                 "sveltekit"
             ]
@@ -501,76 +864,137 @@ class FrontendCompatibility:
             ]
         )
 
-        if not should_repair:
+        if svelte_repair:
 
-            return {
-                "before":
-                before,
-
-                "after":
-                before,
-
-                "actions":
-                [],
-
-                "changed":
-                False,
-            }
-
-        if self.replace_adapter_dependency(
-            project
-        ):
-
-            actions.append({
-                "type":
-                "package_dependency",
-
-                "from":
-                "@sveltejs/adapter-auto",
-
-                "to":
-                "@sveltejs/adapter-static",
-            })
-
-        if self.replace_svelte_adapter(
-            project
-        ):
-
-            actions.append({
-                "type":
-                "svelte_adapter",
-
-                "from":
-                "adapter-auto",
-
-                "to":
-                "adapter-static",
-            })
-
-        if (
-            before[
-                "web_dir"
-            ]
-            !=
-            "build"
-        ):
-
-            if self.set_capacitor_web_dir(
-                project,
-                "build",
+            if self.replace_adapter_dependency(
+                project
             ):
 
                 actions.append({
                     "type":
-                    "capacitor_web_dir",
+                    "package_dependency",
+
+                    "from":
+                    "@sveltejs/adapter-auto",
+
+                    "to":
+                    "@sveltejs/adapter-static",
+                })
+
+            if self.replace_svelte_adapter(
+                project
+            ):
+
+                actions.append({
+                    "type":
+                    "svelte_adapter",
+
+                    "from":
+                    "adapter-auto",
+
+                    "to":
+                    "adapter-static",
+                })
+
+            if (
+                before[
+                    "web_dir"
+                ]
+                !=
+                "build"
+            ):
+
+                if self.set_capacitor_web_dir(
+                    project,
+                    "build",
+                ):
+
+                    actions.append({
+                        "type":
+                        "capacitor_web_dir",
+
+                        "from":
+                        before[
+                            "web_dir"
+                        ],
+
+                        "to":
+                        "build",
+                    })
+
+        # ---------------------------------------------
+        # Next 14 SWC compatibility on Termux ARM64
+        # ---------------------------------------------
+
+        host = before[
+            "host"
+        ]
+
+        next_repair = (
+            before[
+                "next_major"
+            ]
+            ==
+            14
+            and
+            before[
+                "capacitor"
+            ]
+            and
+            before[
+                "next_static_export"
+            ]
+            and
+            host[
+                "termux"
+            ]
+            and
+            host[
+                "android"
+            ]
+            and
+            host[
+                "arm64"
+            ]
+        )
+
+        if next_repair:
+
+            if self.pin_next_version(
+                project,
+                "13.4.19",
+            ):
+
+                actions.append({
+                    "type":
+                    "next_version",
 
                     "from":
                     before[
-                        "web_dir"
+                        "next_version"
                     ],
 
                     "to":
-                    "build",
+                    "13.4.19",
+
+                    "reason":
+                    "Next 14 native SWC unavailable on Termux Android ARM64",
+                })
+
+            viewport_files = (
+                self.remove_next14_viewport_type(
+                    project
+                )
+            )
+
+            if viewport_files:
+
+                actions.append({
+                    "type":
+                    "next_viewport_type",
+
+                    "files":
+                    viewport_files,
                 })
 
         after = self.inspect(

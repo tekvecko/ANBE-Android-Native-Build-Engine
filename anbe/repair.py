@@ -113,6 +113,44 @@ class RepairEngine:
                     )
                 )
 
+            elif (
+                action[
+                    "type"
+                ]
+                ==
+                "next_version"
+            ):
+
+                ctx.log(
+                    "[✓] Next.js Termux compatibility applied: "
+                    +
+                    str(
+                        action[
+                            "from"
+                        ]
+                    )
+                    +
+                    " -> "
+                    +
+                    str(
+                        action[
+                            "to"
+                        ]
+                    )
+                )
+
+            elif (
+                action[
+                    "type"
+                ]
+                ==
+                "next_viewport_type"
+            ):
+
+                ctx.log(
+                    "[✓] Next.js Viewport type compatibility applied"
+                )
+
         GradleDoctor().repair(
             ctx
         )
