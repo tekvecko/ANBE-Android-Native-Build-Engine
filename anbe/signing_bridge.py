@@ -45,6 +45,22 @@ def anbeReleaseSigningConfigured =
 
     def apply(self, ctx):
 
+        if (
+            getattr(
+                ctx,
+                "build_mode",
+                "debug",
+            )
+            !=
+            "release"
+        ):
+
+            ctx.log(
+                "ANBE signing bridge skipped for debug build"
+            )
+
+            return ctx
+
         android_root = Path(
             ctx.path
         ) / "android"

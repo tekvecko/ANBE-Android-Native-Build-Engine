@@ -59,6 +59,8 @@ def test_signing_bridge_injection():
             root
         )
 
+        ctx.build_mode = "release"
+
         SigningBridge().apply(
             ctx
         )
@@ -116,6 +118,8 @@ def test_signing_bridge_idempotent():
         ctx = BuildContext(
             root
         )
+
+        ctx.build_mode = "release"
 
         bridge = SigningBridge()
 
