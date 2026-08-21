@@ -139,3 +139,7 @@ scripts/collect-validation-evidence.sh \
 ```
 
 Generated reports are stored by default under `docs/validation-runs/`.
+
+## Validation runs
+
+- [Electerm 5.2.0 evidence](validation-runs/electerm-5.2.0.md)
