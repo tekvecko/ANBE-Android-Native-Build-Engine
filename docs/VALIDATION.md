@@ -142,4 +142,5 @@ Generated reports are stored by default under `docs/validation-runs/`.
 
 ## Validation runs
 
+- [Google Now in Android evidence](validation-runs/now-in-android.md)
 - [Electerm 5.2.0 evidence](validation-runs/electerm-5.2.0.md)
