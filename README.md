@@ -184,6 +184,56 @@ This test is an important milestone for ANBE: the engine is not limited to toy o
 
 ---
 
+### Electerm
+
+ANBE has also been validated against **Electerm 5.2.0**, a real-world
+hybrid application combining a Capacitor Android host, an embedded Node.js
+runtime, native C/C++ components, WebView UI, and a large JavaScript
+frontend.
+
+The application was built entirely on an ARM64 Android device under Termux.
+The validation required Android NDK/CMake compilation and packaging of the
+Capacitor Node.js plugin.
+
+Observed validation result:
+
+~~~text
+Task: assembleDebug
+BUILD SUCCESSFUL
+130 actionable tasks
+Package: org.electerm.electerm
+Launch activity: org.electerm.electerm.MainActivity
+ABI: arm64-v8a
+~~~
+
+The resulting APK contained the expected ARM64 native libraries:
+
+~~~text
+lib/arm64-v8a/libc++_shared.so
+lib/arm64-v8a/libcapacitor-nodejs.so
+lib/arm64-v8a/liblog.so
+lib/arm64-v8a/libnode.so
+~~~
+
+Runtime validation confirmed that:
+
+1. the APK installed successfully on a physical Android device;
+2. `MainActivity` launched successfully;
+3. `libnode.so` and `libcapacitor-nodejs.so` loaded successfully;
+4. the embedded Node.js runtime started successfully;
+5. the Electerm backend started on `127.0.0.1:5577`;
+6. the WebView frontend connected to the backend and loaded the Electerm UI;
+7. an SSH session was successfully created and used against a Termux
+   OpenSSH server.
+
+This validation demonstrates that ANBE can build considerably more than
+conventional Gradle-only Android applications. Its Android/Termux path has
+successfully handled a hybrid application spanning Gradle, Capacitor,
+Node.js, CMake, the Android NDK, native shared libraries, WebView assets,
+and a functional SSH client.
+
+---
+
 ## Installation
 
 ```bash
