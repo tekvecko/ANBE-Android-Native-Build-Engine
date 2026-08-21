@@ -115,8 +115,12 @@ launch_line="$(printf '%s\n' "$badging" | grep '^launchable-activity:' | head -1
 extract_attr() {
   local line="$1"
   local key="$2"
+
   printf '%s\n' "$line" |
-    sed -n "s/.*${key}='\([^']*\)'.*/\1/p"
+    grep -oE "(^|[[:space:]])${key}='[^']*'" |
+    head -1 |
+    sed -E "s/^[[:space:]]*${key}='([^']*)'$/\\1/" ||
+    true
 }
 
 package_name="$(extract_attr "$package_line" "name")"

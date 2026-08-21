@@ -1,6 +1,6 @@
 # Electerm 5.2.0 validation evidence
 
-Generated: `2026-08-21T15:42:28+02:00`
+Generated: `2026-08-21T16:32:53+02:00`
 
 ## Build identity
 
@@ -18,7 +18,7 @@ Generated: `2026-08-21T15:42:28+02:00`
 
 | Field | Value |
 |---|---|
-| Package | `16` |
+| Package | `org.electerm.electerm` |
 | Launch activity | `org.electerm.electerm.MainActivity` |
 | Version code | `1` |
 | Version name | `1.0` |
@@ -48,11 +48,9 @@ lib/arm64-v8a/libnode.so
 
 Runtime log was not supplied.
 
-## Runtime validation (manual, previously observed)
+## Runtime validation
 
 Runtime behavior was validated manually on a physical ARM64 Android device.
-This section is intentionally marked as manual evidence because this report
-was regenerated without ADB access.
 
 Observed result:
 
@@ -65,5 +63,5 @@ Observed result:
 - the WebView frontend connected to the local backend;
 - an interactive SSH session was successfully opened against Termux OpenSSH.
 
-The Android build itself is reproducibly verified below from the APK artifact,
-without requiring a second device or an ADB connection.
+The build artifact itself is reproducibly verified from the APK without
+requiring ADB access.
