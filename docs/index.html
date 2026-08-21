@@ -183,6 +183,7 @@
       <div class="nav-links">
         <a href="#features">Features</a>
         <a href="#validation">Validation</a>
+        <a href="#validated-projects">Projects</a>
         <a href="#pipeline">Pipeline</a>
         <a href="ARCHITECTURE.md">Architecture</a>
         <a href="ROADMAP.md">Roadmap</a>
@@ -258,6 +259,93 @@ BUILD SUCCESSFUL
 APK: app/build/outputs/apk/demo/debug/app-demo-debug.apk
 Export: /storage/emulated/0/Download/nowinandroid.apk</code></pre>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="electerm-validation">
+      <div class="wrap">
+        <div class="validation">
+          <div class="eyebrow">Real-world validation</div>
+          <h2 class="section-title" style="margin-top:20px">Electerm 5.2.0 — hybrid Android, Node.js and native code built on-device.</h2>
+          <p class="section-copy">
+            ANBE successfully built and ran Electerm 5.2.0 on an ARM64 Android device under Termux.
+            This validation spans Capacitor, an embedded Node.js runtime, Android NDK/CMake,
+            native shared libraries, WebView assets and a functional SSH client.
+          </p>
+
+          <div class="metric-grid">
+            <div class="metric"><strong>130</strong><span>actionable Gradle tasks</span></div>
+            <div class="metric"><strong>ARM64</strong><span>arm64-v8a APK</span></div>
+            <div class="metric"><strong>Node.js</strong><span>embedded runtime started</span></div>
+            <div class="metric"><strong>SSH</strong><span>interactive session validated</span></div>
+          </div>
+
+          <div class="terminal" style="margin-top:24px">
+            <div class="terminal-head">Observed build and runtime result</div>
+            <pre><code>Task: assembleDebug
+BUILD SUCCESSFUL
+130 actionable tasks
+
+Package: org.electerm.electerm
+Activity: org.electerm.electerm.MainActivity
+ABI: arm64-v8a
+
+libnode.so: loaded
+libcapacitor-nodejs.so: loaded
+
+Node backend:
+http://127.0.0.1:5577
+
+SSH validation:
+interactive Termux OpenSSH session successful</code></pre>
+          </div>
+
+          <div class="pipeline" style="margin-top:24px">
+            <span class="pill">Gradle</span>
+            <span class="pill">Capacitor</span>
+            <span class="pill">Node.js</span>
+            <span class="pill">CMake</span>
+            <span class="pill">Android NDK</span>
+            <span class="pill">JNI</span>
+            <span class="pill">WebView</span>
+            <span class="pill">OpenSSH</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="validated-projects">
+      <div class="wrap">
+        <h2 class="section-title">Validated against real projects.</h2>
+        <p class="section-copy">
+          ANBE is tested against substantially different Android codebases rather than only minimal templates.
+        </p>
+
+        <div class="grid">
+          <article class="card">
+            <h3>Google Now in Android</h3>
+            <p>
+              Large multi-module Kotlin/Compose application with product flavors,
+              Hilt, KSP, Room, protobuf and Firebase tooling.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>Electerm 5.2.0</h3>
+            <p>
+              Hybrid Capacitor application with embedded Node.js, native C/C++,
+              Android NDK/CMake, WebView UI and working SSH runtime validation.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>Different build stacks</h3>
+            <p>
+              Validation now covers both a modern native Android application and
+              a complex hybrid application with its own backend runtime.
+            </p>
+          </article>
         </div>
       </div>
     </section>
