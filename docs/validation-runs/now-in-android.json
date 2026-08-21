@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-21T21:36:56+02:00",
+  "name": "Google Now in Android",
+  "build": {
+    "project": "/data/data/com.termux/files/home/anbe-demo-nowinandroid",
+    "git_branch": "main",
+    "git_revision": "7d45eae4f8720a0c77f507712ba2437ff974b6ed",
+    "gradle_task": ":app:assembleDemoDebug"
+  },
+  "apk": {
+    "path": "/data/data/com.termux/files/home/anbe-demo-nowinandroid/app/build/outputs/apk/demo/debug/app-demo-debug.apk",
+    "size_bytes": 37001513,
+    "size_human": "36MiB",
+    "sha256": "870534b59e80fe8432dab56ba8db6aae15d71bca53db8551d7b4f96a89ba4640",
+    "abis": [
+      "arm64-v8a",
+      "armeabi-v7a",
+      "x86",
+      "x86_64"
+    ],
+    "native_libraries": [
+      "lib/arm64-v8a/libandroidx.graphics.path.so",
+      "lib/arm64-v8a/libdatastore_shared_counter.so",
+      "lib/armeabi-v7a/libandroidx.graphics.path.so",
+      "lib/armeabi-v7a/libdatastore_shared_counter.so",
+      "lib/x86/libandroidx.graphics.path.so",
+      "lib/x86/libdatastore_shared_counter.so",
+      "lib/x86_64/libandroidx.graphics.path.so",
+      "lib/x86_64/libdatastore_shared_counter.so"
+    ]
+  },
+  "android": {
+    "package": "com.google.samples.apps.nowinandroid.demo.debug",
+    "launch_activity": "com.google.samples.apps.nowinandroid.MainActivity",
+    "version_code": "8",
+    "version_name": "0.1.2"
+  },
+  "device": {
+    "adb_serial": "",
+    "summary": "not collected",
+    "android_api": "not collected",
+    "primary_abi": "not collected"
+  },
+  "reports": {
+    "markdown": "/data/data/com.termux/files/usr/tmp/anbe-nowinandroid-validation.md",
+    "json": "docs/validation-runs/now-in-android.json"
+  }
+}

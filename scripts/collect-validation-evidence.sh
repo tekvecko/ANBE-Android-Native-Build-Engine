@@ -11,7 +11,8 @@ Usage:
     [--gradle-task assembleDebug] \
     [--device SERIAL] \
     [--runtime-log /path/to/logcat.txt] \
-    [--output docs/validation-runs/project.md]
+    [--output docs/validation-runs/project.md] \
+    [--json-output docs/validation-runs/project.json]
 
 The script collects reproducible Android validation evidence:
 - Git revision when available
@@ -34,6 +35,7 @@ GRADLE_TASK="assembleDebug"
 DEVICE=""
 RUNTIME_LOG=""
 OUTPUT=""
+JSON_OUTPUT=""
 
 while (($#)); do
   case "$1" in
@@ -63,6 +65,10 @@ while (($#)); do
       ;;
     --output)
       OUTPUT="${2:?missing value for --output}"
+      shift 2
+      ;;
+    --json-output)
+      JSON_OUTPUT="${2:?missing value for --json-output}"
       shift 2
       ;;
     -h|--help)
@@ -106,7 +112,16 @@ if [[ -z "$OUTPUT" ]]; then
   OUTPUT="docs/validation-runs/${slug}.md"
 fi
 
+if [[ -z "$JSON_OUTPUT" ]]; then
+  if [[ "$OUTPUT" == *.md ]]; then
+    JSON_OUTPUT="${OUTPUT%.md}.json"
+  else
+    JSON_OUTPUT="${OUTPUT}.json"
+  fi
+fi
+
 mkdir -p "$(dirname "$OUTPUT")"
+mkdir -p "$(dirname "$JSON_OUTPUT")"
 
 badging="$(aapt dump badging "$APK" 2>/dev/null || true)"
 package_line="$(printf '%s\n' "$badging" | grep '^package:' | head -1 || true)"
@@ -267,5 +282,85 @@ fi
   printf '## Runtime evidence\n\n'
   printf '%s\n' "$runtime_section"
 } > "$OUTPUT"
+
+
+echo
+echo "===== WRITE JSON EVIDENCE ====="
+
+export ANBE_JSON_NAME="$NAME"
+export ANBE_JSON_PROJECT="$PROJECT"
+export ANBE_JSON_APK="$APK"
+export ANBE_JSON_GRADLE_TASK="$GRADLE_TASK"
+export ANBE_JSON_OUTPUT="$OUTPUT"
+export ANBE_JSON_JSON_OUTPUT="$JSON_OUTPUT"
+export ANBE_JSON_PACKAGE="${package_name:-}"
+export ANBE_JSON_LAUNCH_ACTIVITY="${launch_activity:-}"
+export ANBE_JSON_VERSION_CODE="${version_code:-}"
+export ANBE_JSON_VERSION_NAME="${version_name:-}"
+export ANBE_JSON_APK_SIZE_BYTES="$apk_size_bytes"
+export ANBE_JSON_APK_SIZE_HUMAN="$apk_size_human"
+export ANBE_JSON_APK_SHA256="$apk_sha256"
+export ANBE_JSON_GIT_BRANCH="$git_branch"
+export ANBE_JSON_GIT_REVISION="$git_revision"
+export ANBE_JSON_DEVICE_SERIAL="${DEVICE:-}"
+export ANBE_JSON_DEVICE_SUMMARY="$device_summary"
+export ANBE_JSON_DEVICE_SDK="$device_sdk"
+export ANBE_JSON_DEVICE_ABI="$device_abi"
+export ANBE_JSON_ABIS="$(printf '%s\n' "${abis[@]:-}")"
+export ANBE_JSON_NATIVE_LIBS="$(printf '%s\n' "${native_libs[@]:-}")"
+
+python - <<'PYJSON'
+import json
+import os
+from datetime import datetime
+
+def env(name, default=""):
+    return os.environ.get(name, default)
+
+def lines(name):
+    return [line for line in env(name).splitlines() if line]
+
+payload = {
+    "schema_version": 1,
+    "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+    "name": env("ANBE_JSON_NAME"),
+    "build": {
+        "project": env("ANBE_JSON_PROJECT"),
+        "git_branch": env("ANBE_JSON_GIT_BRANCH"),
+        "git_revision": env("ANBE_JSON_GIT_REVISION"),
+        "gradle_task": env("ANBE_JSON_GRADLE_TASK"),
+    },
+    "apk": {
+        "path": env("ANBE_JSON_APK"),
+        "size_bytes": int(env("ANBE_JSON_APK_SIZE_BYTES", "0")),
+        "size_human": env("ANBE_JSON_APK_SIZE_HUMAN"),
+        "sha256": env("ANBE_JSON_APK_SHA256"),
+        "abis": lines("ANBE_JSON_ABIS"),
+        "native_libraries": lines("ANBE_JSON_NATIVE_LIBS"),
+    },
+    "android": {
+        "package": env("ANBE_JSON_PACKAGE"),
+        "launch_activity": env("ANBE_JSON_LAUNCH_ACTIVITY"),
+        "version_code": env("ANBE_JSON_VERSION_CODE"),
+        "version_name": env("ANBE_JSON_VERSION_NAME"),
+    },
+    "device": {
+        "adb_serial": env("ANBE_JSON_DEVICE_SERIAL"),
+        "summary": env("ANBE_JSON_DEVICE_SUMMARY"),
+        "android_api": env("ANBE_JSON_DEVICE_SDK"),
+        "primary_abi": env("ANBE_JSON_DEVICE_ABI"),
+    },
+    "reports": {
+        "markdown": env("ANBE_JSON_OUTPUT"),
+        "json": env("ANBE_JSON_JSON_OUTPUT"),
+    },
+}
+
+with open(env("ANBE_JSON_JSON_OUTPUT"), "w", encoding="utf-8") as f:
+    json.dump(payload, f, indent=2, ensure_ascii=False)
+    f.write("\n")
+PYJSON
+
+echo "[OK] JSON evidence written to: $JSON_OUTPUT"
 
 echo "[OK] Validation evidence written to: $OUTPUT"

@@ -140,6 +140,24 @@ scripts/collect-validation-evidence.sh \
 
 Generated reports are stored by default under `docs/validation-runs/`.
 
+
+## Machine-readable validation evidence
+
+The validation collector writes both Markdown and JSON evidence.
+
+By default, the files are created together:
+
+```text
+docs/validation-runs/<project>.md
+docs/validation-runs/<project>.json
+```
+
+A custom JSON path can be selected with `--json-output`.
+
+The JSON report includes build identity, APK checksum and size, Android
+package metadata, packaged ABIs, native libraries, and optional device
+metadata. The format is intended for automated validation dashboards,
+badges, regression checks, and GitHub Pages generation.
 ## Validation runs
 
 - [Google Now in Android evidence](validation-runs/now-in-android.md)

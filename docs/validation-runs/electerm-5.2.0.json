@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-21T21:36:55+02:00",
+  "name": "Electerm 5.2.0",
+  "build": {
+    "project": "/data/data/com.termux/files/home/anbe-demo-electerm/build/android/android",
+    "git_branch": "main",
+    "git_revision": "3105be232121e301cdad4766357bd0addb0a2b61",
+    "gradle_task": "assembleDebug"
+  },
+  "apk": {
+    "path": "/data/data/com.termux/files/home/anbe-demo-electerm/build/android/android/app/build/outputs/apk/debug/app-debug.apk",
+    "size_bytes": 75052054,
+    "size_human": "72MiB",
+    "sha256": "91f844358b23973b000225507b3ef399667b366adc436272aacbc99134f17240",
+    "abis": [
+      "arm64-v8a"
+    ],
+    "native_libraries": [
+      "lib/arm64-v8a/libc++_shared.so",
+      "lib/arm64-v8a/libcapacitor-nodejs.so",
+      "lib/arm64-v8a/libnode.so"
+    ]
+  },
+  "android": {
+    "package": "org.electerm.electerm",
+    "launch_activity": "org.electerm.electerm.MainActivity",
+    "version_code": "1",
+    "version_name": "1.0"
+  },
+  "device": {
+    "adb_serial": "",
+    "summary": "not collected",
+    "android_api": "not collected",
+    "primary_abi": "not collected"
+  },
+  "reports": {
+    "markdown": "/data/data/com.termux/files/usr/tmp/anbe-electerm-validation.md",
+    "json": "docs/validation-runs/electerm-5.2.0.json"
+  }
+}
