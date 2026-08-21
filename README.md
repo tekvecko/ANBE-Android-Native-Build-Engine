@@ -12,7 +12,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12%2B-blue)](pyproject.toml)
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20Termux%20%7C%20ARM64-green)](#supported-platform)
 
-**[Quick Start](#quick-start) · [Real-world validation](#real-world-validation) · [Launch](#anbe-launch) · [Architecture](docs/ARCHITECTURE.md) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)**
+**[Quick Start](#quick-start) · [Real-world validation](#real-world-validation) · [Validation matrix](docs/VALIDATION.md) · [Launch](#anbe-launch) · [Architecture](docs/ARCHITECTURE.md) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)**
 
 </div>
 
@@ -231,6 +231,10 @@ conventional Gradle-only Android applications. Its Android/Termux path has
 successfully handled a hybrid application spanning Gradle, Capacitor,
 Node.js, CMake, the Android NDK, native shared libraries, WebView assets,
 and a functional SSH client.
+
+---
+
+For the full validation matrix and runtime evidence, see [docs/VALIDATION.md](docs/VALIDATION.md).
 
 ---
 
