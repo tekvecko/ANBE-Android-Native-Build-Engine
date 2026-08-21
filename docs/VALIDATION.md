@@ -116,3 +116,26 @@ A project should only be listed as runtime validated when all applicable stages 
 ## Current status
 
 ANBE has now been validated against both a large modern native Android application and a complex hybrid Android application with an embedded Node.js and native C/C++ runtime.
+
+## Reproducible evidence collector
+
+ANBE includes `scripts/collect-validation-evidence.sh` for generating
+Markdown evidence from a real Android build.
+
+The collector records APK metadata, package and launch activity, SHA-256,
+packaged ABIs, native shared libraries, Git revision and optional connected
+device/runtime-log evidence.
+
+Example:
+
+```bash
+scripts/collect-validation-evidence.sh \
+  --project ~/anbe-demo-electerm/build/android/android \
+  --apk ~/anbe-demo-electerm/build/android/android/app/build/outputs/apk/debug/app-debug.apk \
+  --name "Electerm 5.2.0" \
+  --gradle-task assembleDebug \
+  --device 192.168.10.50:35325 \
+  --runtime-log ~/electerm-runtime.log
+```
+
+Generated reports are stored by default under `docs/validation-runs/`.
